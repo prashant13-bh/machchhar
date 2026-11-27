@@ -285,8 +285,10 @@ export class CartoonRenderer {
     const startX = sleeper.gunPivotX + Math.cos(sleeper.gunAngle) * muzzleDist;
     const startY = sleeper.gunPivotY + Math.sin(sleeper.gunAngle) * muzzleDist;
 
-    const dx = sleeper.aimX - startX;
-    const dy = sleeper.aimY - startY;
+    const endX = sleeper.rayEndX;
+    const endY = sleeper.rayEndY;
+    const dx = endX - startX;
+    const dy = endY - startY;
     const dist = Math.hypot(dx, dy);
     if (dist < 10) return;
 
@@ -297,40 +299,40 @@ export class CartoonRenderer {
         : '#ffd166';
 
     ctx.save();
-    // Animated marching dots from gun barrel to reticle
+    // Animated marching dots from gun barrel all the way to locked mosquito / room boundary
     const step = 16;
     const marchOffset = (timeSec * 48) % step;
     for (let d = marchOffset; d <= dist; d += step) {
       const t = d / dist;
       const px = startX + dx * t;
       const py = startY + dy * t;
-      const radius = sleeper.aimLockedOn ? 3.5 : 2.9;
-      ctx.globalAlpha = 0.38 + 0.55 * (1 - t * 0.35);
+      const radius = sleeper.aimLockedOn ? 3.8 : 3.0;
+      ctx.globalAlpha = 0.45 + 0.5 * (1 - t * 0.3);
       ctx.fillStyle = dotColor;
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Target reticle circle at aimX, aimY
-    ctx.globalAlpha = 0.92;
+    // Target reticle circle at rayEnd (snaps onto locked mosquito when lined up!)
+    ctx.globalAlpha = 0.95;
     ctx.strokeStyle = dotColor;
-    ctx.lineWidth = sleeper.aimLockedOn ? 3 : 2.2;
-    const retR = sleeper.aimLockedOn ? 18 + Math.sin(timeSec * 14) * 2.5 : 14;
+    ctx.lineWidth = sleeper.aimLockedOn ? 3.2 : 2.2;
+    const retR = sleeper.aimLockedOn ? 22 + Math.sin(timeSec * 14) * 3 : 14;
     ctx.beginPath();
-    ctx.arc(sleeper.aimX, sleeper.aimY, retR, 0, Math.PI * 2);
+    ctx.arc(endX, endY, retR, 0, Math.PI * 2);
     ctx.stroke();
 
     // Crosshair ticks
     ctx.beginPath();
-    ctx.moveTo(sleeper.aimX - retR - 6, sleeper.aimY);
-    ctx.lineTo(sleeper.aimX - retR + 4, sleeper.aimY);
-    ctx.moveTo(sleeper.aimX + retR - 4, sleeper.aimY);
-    ctx.lineTo(sleeper.aimX + retR + 6, sleeper.aimY);
-    ctx.moveTo(sleeper.aimX, sleeper.aimY - retR - 6);
-    ctx.lineTo(sleeper.aimX, sleeper.aimY - retR + 4);
-    ctx.moveTo(sleeper.aimX, sleeper.aimY + retR - 4);
-    ctx.lineTo(sleeper.aimX, sleeper.aimY + retR + 6);
+    ctx.moveTo(endX - retR - 6, endY);
+    ctx.lineTo(endX - retR + 4, endY);
+    ctx.moveTo(endX + retR - 4, endY);
+    ctx.lineTo(endX + retR + 6, endY);
+    ctx.moveTo(endX, endY - retR - 6);
+    ctx.lineTo(endX, endY - retR + 4);
+    ctx.moveTo(endX, endY + retR - 4);
+    ctx.lineTo(endX, endY + retR + 6);
     ctx.stroke();
 
     ctx.restore();

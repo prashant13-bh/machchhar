@@ -114,6 +114,8 @@ export interface SleeperState {
   gunAngle: number;
   aimX: number;
   aimY: number;
+  rayEndX: number;
+  rayEndY: number;
   isAiming: boolean;
   aimLockedOn: boolean;
   recoilTimerMs: number;

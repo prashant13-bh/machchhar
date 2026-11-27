@@ -23,6 +23,7 @@ body {
   padding: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg-dark);
   color: var(--text-main);
@@ -34,6 +35,7 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -163,17 +165,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px 16px 72px;
+  padding: calc(56px + env(safe-area-inset-top)) 14px calc(68px + env(safe-area-inset-bottom));
   pointer-events: auto;
 }
 
 .card {
   width: 100%;
   max-width: 390px;
+  max-height: 100%;
+  overflow-y: auto;
   background: var(--card-bg);
   border: 1.5px solid var(--card-border);
   border-radius: 24px;
-  padding: 22px 20px;
+  padding: 20px 18px;
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55);
   text-align: center;
   animation: popIn 0.22s ease-out;
@@ -510,4 +514,82 @@ button {
   margin: 14px 0 16px;
   font-size: 15px;
   color: #ffd166;
+}
+
+/* Mobile-first responsive adjustments for compact phone screens */
+@media (max-width: 480px), (max-height: 740px) {
+  .hud-bar {
+    padding: calc(8px + env(safe-area-inset-top)) 10px 6px;
+    gap: 6px;
+  }
+
+  .hud-pill {
+    padding: 5px 9px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .hud-center-info {
+    top: calc(92px + env(safe-area-inset-top));
+  }
+
+  .screen-backdrop {
+    padding: calc(52px + env(safe-area-inset-top)) 12px calc(62px + env(safe-area-inset-bottom));
+  }
+
+  .card {
+    padding: 16px 14px;
+    border-radius: 20px;
+  }
+
+  .title-main {
+    font-size: 25px;
+  }
+
+  .subtitle {
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+
+  .stats-row {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .stat-box {
+    padding: 7px 4px;
+  }
+
+  .stat-box strong {
+    font-size: 14px;
+  }
+
+  .booster-bar {
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+
+  .booster-chip {
+    padding: 7px 3px;
+    font-size: 10.5px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-reward,
+  .btn-danger {
+    padding: 11px 12px;
+    font-size: 13.5px;
+    border-radius: 12px;
+  }
+
+  .level-grid {
+    max-height: 44dvh;
+  }
 }

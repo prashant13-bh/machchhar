@@ -121,6 +121,8 @@ export class GameEngine {
     gunAngle: -Math.PI / 2.2,
     aimX: 240,
     aimY: 260,
+    rayEndX: 240,
+    rayEndY: 60,
     isAiming: false,
     aimLockedOn: false,
     recoilTimerMs: 0,
@@ -281,6 +283,8 @@ export class GameEngine {
     this.sleeper.shakeTimerMs = 0;
     this.sleeper.isAiming = false;
     this.sleeper.aimLockedOn = false;
+    this.sleeper.rayEndX = 240;
+    this.sleeper.rayEndY = 60;
     this.sleeper.gunAngle = -Math.PI / 2.2;
     this.sleeper.recoilTimerMs = 0;
     this.sleeper.muzzleFlashMs = 0;
@@ -289,9 +293,17 @@ export class GameEngine {
 
   private bindEvents(): void {
     window.addEventListener('resize', () => this.resize());
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => this.resize());
+      ro.observe(this.canvas);
+    }
     this.canvas.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
     this.canvas.addEventListener('pointermove', (e) => this.handlePointerMove(e));
     window.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+    window.addEventListener('pointercancel', () => {
+      this.pointerDownActive = false;
+      this.sleeper.isAiming = false;
+    });
     this.canvas.addEventListener('pointerleave', () => {
       if (!this.pointerDownActive) {
         this.sleeper.isAiming = false;
@@ -313,22 +325,41 @@ export class GameEngine {
     const canvasX = (event.clientX - rect.left) * dpr;
     const canvasY = (event.clientY - rect.top) * dpr;
 
-    const wx = (canvasX - this.viewOffsetX) / this.viewScale;
-    const wy = (canvasY - this.viewOffsetY) / this.viewScale;
-    if (wx < 0 || wx > WORLD_WIDTH || wy < 0 || wy > WORLD_HEIGHT) return null;
+    const wx = Math.max(0, Math.min(WORLD_WIDTH, (canvasX - this.viewOffsetX) / this.viewScale));
+    const wy = Math.max(0, Math.min(WORLD_HEIGHT, (canvasY - this.viewOffsetY) / this.viewScale));
     return { wx, wy };
   }
 
   private updateAimTarget(wx: number, wy: number): void {
-    const clampedY = Math.min(wy, this.sleeper.gunPivotY - 30);
+    // Allow aiming from anywhere on screen (even near bottom edge on mobile)
+    const refY = wy > this.sleeper.gunPivotY - 32 ? this.sleeper.gunPivotY - 140 : wy;
+    let angle = Math.atan2(refY - this.sleeper.gunPivotY, wx - this.sleeper.gunPivotX);
+    // Clamp upward aiming arc (-165 deg to -15 deg) so gun always shoots into the room
+    angle = Math.max(-Math.PI * 0.92, Math.min(-Math.PI * 0.08, angle));
+
     this.sleeper.aimX = wx;
-    this.sleeper.aimY = clampedY;
+    this.sleeper.aimY = Math.min(wy, this.sleeper.gunPivotY - 24);
     this.sleeper.isAiming = true;
-    this.sleeper.gunAngle = Math.atan2(
-      clampedY - this.sleeper.gunPivotY,
-      wx - this.sleeper.gunPivotX
-    );
+    this.sleeper.gunAngle = angle;
     this.refreshAimLock();
+  }
+
+  private computeRayRoomEnd(startX: number, startY: number, angle: number): { x: number; y: number } {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    let tMax = 1200;
+
+    if (cos > 0.001) tMax = Math.min(tMax, (WORLD_WIDTH - startX) / cos);
+    else if (cos < -0.001) tMax = Math.min(tMax, (0 - startX) / cos);
+
+    if (sin < -0.001) tMax = Math.min(tMax, (0 - startY) / sin);
+    else if (sin > 0.001) tMax = Math.min(tMax, (WORLD_HEIGHT - startY) / sin);
+
+    tMax = Math.max(20, tMax);
+    return {
+      x: startX + cos * tMax,
+      y: startY + sin * tMax,
+    };
   }
 
   private refreshAimLock(): void {
@@ -336,15 +367,53 @@ export class GameEngine {
       this.sleeper.aimLockedOn = false;
       return;
     }
+
+    const muzzleDist = 52;
+    const muzzleX = this.sleeper.gunPivotX + Math.cos(this.sleeper.gunAngle) * muzzleDist;
+    const muzzleY = this.sleeper.gunPivotY + Math.sin(this.sleeper.gunAngle) * muzzleDist;
+    const roomEnd = this.computeRayRoomEnd(muzzleX, muzzleY, this.sleeper.gunAngle);
+
     const isZap = this.racketMs > 0;
-    const bonus = (isZap ? 28 : 10) + (this.dda.statusLabel === 'Mercy' ? 6 : 0);
-    this.sleeper.aimLockedOn =
-      this.mosquitoes.some(
-        (m) => Math.hypot(this.sleeper.aimX - m.x, this.sleeper.aimY - m.y) <= m.hitRadius + bonus
-      ) ||
-      this.powerUps.some(
-        (p) => Math.hypot(this.sleeper.aimX - p.x, this.sleeper.aimY - p.y) <= p.radius + 16
-      );
+    const mercyPad = this.dda.statusLabel === 'Mercy' ? 6 : 0;
+    const rayTol = (isZap ? 26 : 12) + mercyPad;
+
+    // Find closest target along the entire extended laser ray!
+    let bestDist = Infinity;
+    let lockedX = roomEnd.x;
+    let lockedY = roomEnd.y;
+    let found = false;
+
+    for (const p of this.powerUps) {
+      const hitRay = this.distPointToSegment(p.x, p.y, muzzleX, muzzleY, roomEnd.x, roomEnd.y) <= p.radius + 14;
+      const hitCursor = Math.hypot(this.sleeper.aimX - p.x, this.sleeper.aimY - p.y) <= p.radius + 18;
+      if (hitRay || hitCursor) {
+        const d = Math.hypot(p.x - muzzleX, p.y - muzzleY);
+        if (d < bestDist) {
+          bestDist = d;
+          lockedX = p.x;
+          lockedY = p.y;
+          found = true;
+        }
+      }
+    }
+
+    for (const m of this.mosquitoes) {
+      const hitRay = this.distPointToSegment(m.x, m.y, muzzleX, muzzleY, roomEnd.x, roomEnd.y) <= m.hitRadius * 0.85 + rayTol;
+      const hitCursor = Math.hypot(this.sleeper.aimX - m.x, this.sleeper.aimY - m.y) <= m.hitRadius + rayTol;
+      if (hitRay || hitCursor) {
+        const d = Math.hypot(m.x - muzzleX, m.y - muzzleY);
+        if (d < bestDist) {
+          bestDist = d;
+          lockedX = m.x;
+          lockedY = m.y;
+          found = true;
+        }
+      }
+    }
+
+    this.sleeper.aimLockedOn = found;
+    this.sleeper.rayEndX = lockedX;
+    this.sleeper.rayEndY = lockedY;
   }
 
   private handlePointerDown(event: PointerEvent): void {
@@ -376,14 +445,14 @@ export class GameEngine {
     if (coords) {
       this.updateAimTarget(coords.wx, coords.wy);
     }
-    this.fireShot(this.sleeper.aimX, this.sleeper.aimY);
+    this.fireShot(this.sleeper.aimX, this.sleeper.aimY, this.sleeper.rayEndX, this.sleeper.rayEndY);
 
     if (event.pointerType !== 'mouse') {
       this.sleeper.isAiming = false;
     }
   }
 
-  private fireShot(targetX: number, targetY: number): void {
+  private fireShot(cursorX: number, cursorY: number, rayEndX: number, rayEndY: number): void {
     const isZap = this.racketMs > 0;
 
     // 6-shot reload gate (bypassed when Zap Ammo is active!)
@@ -406,6 +475,7 @@ export class GameEngine {
     const muzzleDist = 52;
     const muzzleX = this.sleeper.gunPivotX + Math.cos(this.sleeper.gunAngle) * muzzleDist;
     const muzzleY = this.sleeper.gunPivotY + Math.sin(this.sleeper.gunAngle) * muzzleDist;
+    const roomEnd = this.computeRayRoomEnd(muzzleX, muzzleY, this.sleeper.gunAngle);
 
     this.sleeper.recoilTimerMs = 130;
     this.sleeper.muzzleFlashMs = 100;
@@ -420,10 +490,12 @@ export class GameEngine {
       lifeMs: 750,
     });
 
-    // 1. Check floating power-ups
+    // 1. Check floating power-ups along the full aim ray OR near tap/cursor
     for (let i = this.powerUps.length - 1; i >= 0; i--) {
       const p = this.powerUps[i];
-      if (this.pointHitsCircle(p.x, p.y, p.radius + 16, muzzleX, muzzleY, targetX, targetY)) {
+      const hitRay = this.pointHitsCircle(p.x, p.y, p.radius + 16, muzzleX, muzzleY, roomEnd.x, roomEnd.y);
+      const hitCursor = Math.hypot(cursorX - p.x, cursorY - p.y) <= p.radius + 18;
+      if (hitRay || hitCursor) {
         this.tracers.push({
           x1: muzzleX,
           y1: muzzleY,
@@ -441,16 +513,18 @@ export class GameEngine {
 
     this.totalShots += 1;
 
-    // 2. Hit mosquitoes
+    // 2. Hit mosquitoes at tap/cursor OR anywhere along the extended dotted laser ray!
     const mercyPad = this.dda.statusLabel === 'Mercy' ? 6 : 0;
+    const rayTol = (isZap ? 26 : 12) + mercyPad;
     const hitIndices: number[] = [];
     for (let i = this.mosquitoes.length - 1; i >= 0; i--) {
       const m = this.mosquitoes[i];
       const hitAtReticle =
-        Math.hypot(targetX - m.x, targetY - m.y) <= m.hitRadius + (isZap ? 32 : 10) + mercyPad;
+        Math.hypot(cursorX - m.x, cursorY - m.y) <= m.hitRadius + rayTol ||
+        Math.hypot(rayEndX - m.x, rayEndY - m.y) <= m.hitRadius + rayTol;
       const hitAlongRay =
-        this.distPointToSegment(m.x, m.y, muzzleX, muzzleY, targetX, targetY) <=
-        m.hitRadius * 0.72 + (isZap ? 14 : 0) + mercyPad;
+        this.distPointToSegment(m.x, m.y, muzzleX, muzzleY, roomEnd.x, roomEnd.y) <=
+        m.hitRadius * 0.85 + rayTol;
 
       if (hitAtReticle || hitAlongRay) {
         hitIndices.push(i);
@@ -461,8 +535,8 @@ export class GameEngine {
     if (hitIndices.length > 0) {
       this.hitShots += 1;
       const firstHit = this.mosquitoes[hitIndices[0]];
-      const impactX = firstHit ? firstHit.x : targetX;
-      const impactY = firstHit ? firstHit.y : targetY;
+      const impactX = firstHit ? firstHit.x : rayEndX;
+      const impactY = firstHit ? firstHit.y : rayEndY;
 
       this.tracers.push({
         x1: muzzleX,
@@ -529,8 +603,8 @@ export class GameEngine {
     this.tracers.push({
       x1: muzzleX,
       y1: muzzleY,
-      x2: targetX,
-      y2: targetY,
+      x2: roomEnd.x,
+      y2: roomEnd.y,
       lifeMs: 110,
       maxLifeMs: 110,
       isZap,
@@ -539,8 +613,8 @@ export class GameEngine {
     const missBubble = audioEngine.playMissVoice(this.level.id >= 3);
     this.sleeper.speechBubble = { text: missBubble, lifeMs: 1050 };
     this.impacts.push({
-      x: targetX,
-      y: targetY,
+      x: cursorX,
+      y: cursorY,
       radius: isZap ? 48 : 24,
       lifeMs: 210,
       maxLifeMs: 210,
