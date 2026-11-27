@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#f0f7ff" />
+    <meta name="theme-color" content="#f6f3ea" />
     <meta
       name="description"
-      content="Machchhar: Raat ka Daaku — Protect the peaceful sleeper from buzzing &amp; singing mosquitoes!"
+      content="Machchhar: Raat ka Daaku — Protect Uncle's midnight sleep from buzzing &amp; singing mosquitoes!"
     />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
     <link rel="apple-touch-icon" href="./icon-512.png" />
@@ -18,75 +18,60 @@
   </head>
   <body>
     <div id="app">
+      <header id="desktop-topbar" class="desktop-bar" aria-label="Game Navigation">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 28 28" width="22" height="22" fill="none">
+              <circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="2.4" />
+              <circle cx="14" cy="14" r="3" fill="#e11d48" />
+              <path d="M14 2v5M14 21v5M2 14h5M21 14h5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+            </svg>
+          </span>
+          <div class="brand-text">
+            <strong>MACHCHHAR</strong>
+            <span>Raat ka Daaku</span>
+          </div>
+        </div>
+
+        <nav class="top-nav-pills" aria-label="Quick Actions">
+          <button id="top-nights-btn" class="nav-chip" type="button">Nights</button>
+          <button id="top-endless-btn" class="nav-chip" type="button">Endless</button>
+          <button id="top-guide-btn" class="nav-chip" type="button">Field Guide</button>
+          <button id="top-badges-btn" class="nav-chip" type="button">Trophies</button>
+        </nav>
+
+        <div class="top-utility">
+          <span id="top-coins-pill" class="top-stat-pill">0 Coins</span>
+          <span id="top-best-pill" class="top-stat-pill">Best 0</span>
+          <button id="desktop-theme-btn" class="top-icon-btn" type="button" title="Toggle Theme">Dark</button>
+          <button id="desktop-fullscreen-btn" class="top-icon-btn" type="button" title="Fullscreen (F)">Full</button>
+        </div>
+      </header>
+
       <div id="desktop-shell">
-        <aside id="desktop-left" class="desktop-panel" aria-label="Controls and Enemy Guide">
-          <div class="panel-card">
-            <div class="panel-kicker">DESKTOP ARCADE EDITION</div>
-            <h2 class="panel-title">Machchhar: Raat ka Daaku</h2>
-            <p class="panel-desc">
-              Guard Uncle's midnight sleep from singing, dodging, and armored mosquitoes using laser-guided shots!
-            </p>
-          </div>
-
-          <div class="panel-card">
-            <h3 class="panel-heading">🎮 Desktop Controls</h3>
-            <ul class="key-list">
-              <li><span>Aim Laser Sight</span><kbd>Mouse</kbd> / <kbd>A</kbd><kbd>D</kbd></li>
-              <li><span>Instant Blast</span><kbd>Left Click</kbd> / <kbd>Space</kbd></li>
-              <li><span>Tactical Reload</span><kbd>R</kbd> or Tap Ammo</li>
-              <li><span>Pause / Resume</span><kbd>P</kbd> or <kbd>Esc</kbd></li>
-              <li><span>Mute / Fullscreen</span><kbd>M</kbd> / <kbd>F</kbd></li>
-            </ul>
-          </div>
-
-          <div class="panel-card">
-            <h3 class="panel-heading">🦟 Mosquito Field Guide</h3>
-            <div class="intel-list">
-              <div class="intel-item"><span>🦟</span><div><strong>Buzzer</strong><small>1 HP · Standard pest</small></div></div>
-              <div class="intel-item"><span>🎧</span><div><strong>DJ Singer</strong><small>300 pts · Sings songs, drops mic!</small></div></div>
-              <div class="intel-item"><span>🥷</span><div><strong>Ninja</strong><small>Fast · Dodges laser locks!</small></div></div>
-              <div class="intel-item"><span>🛡️</span><div><strong>Tank</strong><small>2 HP · Stuns on first shot</small></div></div>
-              <div class="intel-item"><span>👑</span><div><strong>King Boss</strong><small>6 HP · Appears on Boss Nights</small></div></div>
-            </div>
-          </div>
-        </aside>
-
         <main id="stage-frame">
           <canvas id="game-canvas"></canvas>
           <div id="ui-overlay"></div>
           <div id="achievement-toast" class="achievement-toast hidden" role="status" aria-live="polite"></div>
         </main>
-
-        <aside id="desktop-right" class="desktop-panel" aria-label="Career Stats and Desktop Navigation">
-          <div id="desktop-career-card" class="panel-card"></div>
-
-          <div class="panel-card">
-            <h3 class="panel-heading">⚡ Arsenal &amp; Fever Tips</h3>
-            <div class="intel-list">
-              <div class="intel-item"><span>⚡</span><div><strong>Zap Ammo</strong><small>Infinite rapid shots + chain hit</small></div></div>
-              <div class="intel-item"><span>🌀</span><div><strong>Sleep Coil</strong><small>Slows every mosquito by 52%</small></div></div>
-              <div class="intel-item"><span>💖</span><div><strong>Deep Sleep</strong><small>Restores +1 Sleep Heart</small></div></div>
-              <div class="intel-item"><span>🔥</span><div><strong>5x Streak Bonus</strong><small>Every 5 combo kills grants +5 🪙</small></div></div>
-            </div>
-          </div>
-
-          <div class="panel-card">
-            <h3 class="panel-heading">🌐 Desktop Pages</h3>
-            <div class="desktop-actions">
-              <div class="desktop-btn-row">
-                <button id="desktop-fullscreen-btn" class="btn-secondary btn-compact" type="button">⛶ FULLSCREEN (F)</button>
-                <button id="desktop-theme-btn" class="btn-secondary btn-compact" type="button">☀️ LIGHT</button>
-              </div>
-              <nav class="desktop-nav-links">
-                <a href="./guide.html">📖 Game Guide</a>
-                <a href="./privacy.html">🔒 Privacy Policy</a>
-                <a href="./terms.html">📜 Terms of Service</a>
-                <a href="./support.html">🛟 Support</a>
-              </nav>
-            </div>
-          </div>
-        </aside>
       </div>
+
+      <footer id="desktop-bottombar" class="desktop-bar desktop-footer">
+        <div class="controls-strip">
+          <span><kbd>Mouse</kbd> / <kbd>A</kbd><kbd>D</kbd> Aim</span>
+          <span><kbd>Click</kbd> / <kbd>Space</kbd> Shoot</span>
+          <span><kbd>R</kbd> Reload</span>
+          <span><kbd>P</kbd> Pause</span>
+          <span><kbd>M</kbd> Sound</span>
+          <span><kbd>F</kbd> Fullscreen</span>
+        </div>
+        <div class="footer-links">
+          <a href="./guide.html">Manual</a>
+          <a href="./privacy.html">Privacy</a>
+          <a href="./terms.html">Terms</a>
+          <a href="./support.html">Support</a>
+        </div>
+      </footer>
 
       <div id="web-banner-slot" class="web-banner hidden" aria-hidden="true"></div>
     </div>

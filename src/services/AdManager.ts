@@ -55,13 +55,11 @@ class AdManager {
     }
 
     const slot = document.getElementById('web-banner-slot');
-    if (slot && AD_CONFIG.web.enabled) {
+    if (slot && AD_CONFIG.web.enabled && AD_CONFIG.web.adsenseClientId) {
       slot.classList.remove('hidden');
       if (!slot.dataset.rendered) {
         slot.dataset.rendered = '1';
-        slot.innerHTML = AD_CONFIG.web.adsenseClientId
-          ? `<ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="${AD_CONFIG.web.adsenseClientId}" data-ad-slot="${AD_CONFIG.web.bannerSlotId}"></ins>`
-          : `<div class="web-banner-placeholder"><span>AD SLOT</span><small>Ready for AdSense / AdMob Banner (${AD_CONFIG.useTestAds ? 'Test Mode' : 'Live'})</small></div>`;
+        slot.innerHTML = `<ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="${AD_CONFIG.web.adsenseClientId}" data-ad-slot="${AD_CONFIG.web.bannerSlotId}"></ins>`;
       }
     }
   }

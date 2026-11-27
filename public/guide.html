@@ -3,75 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Guide &amp; Controls — Machchhar: Raat ka Daaku</title>
+    <title>Field Manual — Machchhar: Raat ka Daaku</title>
     <style>
       body {
         margin: 0;
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        background: linear-gradient(140deg, #eff6ff 0%, #f8fafc 50%, #fef9ec 100%);
+        font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+        background-color: #f6f3ea;
+        background-image: radial-gradient(rgba(30, 41, 59, 0.085) 1.4px, transparent 1.4px);
+        background-size: 20px 20px;
         color: #0f172a;
-        line-height: 1.65;
+        line-height: 1.6;
         min-height: 100vh;
       }
       .wrap {
-        max-width: 980px;
+        max-width: 960px;
         margin: 0 auto;
         padding: 28px 20px 60px;
       }
       .nav {
         margin-bottom: 20px;
         display: flex;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
-        font-size: 14px;
+        font-size: 13.5px;
       }
       .nav a {
-        color: #0369a1;
+        color: #0f172a;
         text-decoration: none;
         padding: 7px 14px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        border-radius: 10px;
+        background: #fffdf8;
+        border: 2px solid #1e293b;
+        font-weight: 800;
+        box-shadow: 0 2px 0 #1e293b;
       }
       .nav a.active,
       .nav a:hover {
-        border-color: #f59e0b;
-        color: #b45309;
-        background: #fffbeb;
+        background: #ffbe0b;
+        color: #1e1b4b;
       }
       .hero {
-        background: #ffffff;
-        border: 1px solid rgba(245, 158, 11, 0.35);
+        background: #fffdf8;
+        border: 2.5px solid #1e293b;
         border-radius: 20px;
-        padding: 26px 24px;
-        margin-bottom: 20px;
+        padding: 24px;
+        margin-bottom: 18px;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 6px 0 #1e293b;
       }
       .hero h1 {
-        margin: 0 0 6px;
-        color: #0f172a;
-        font-size: 1.75rem;
+        margin: 0 0 4px;
+        font-size: 1.7rem;
+        font-weight: 900;
       }
       .hero p {
         margin: 0;
         color: #475569;
+        font-weight: 600;
       }
       .play-cta {
         display: inline-block;
         padding: 12px 22px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #ffd166, #f59e0b);
+        border-radius: 13px;
+        background: linear-gradient(180deg, #ffd166 0%, #f59e0b 100%);
         color: #1e1b4b;
-        font-weight: 800;
+        font-weight: 900;
         text-decoration: none;
-        box-shadow: 0 8px 18px rgba(245, 158, 11, 0.28);
+        border: 2.5px solid #1e293b;
+        box-shadow: 0 4px 0 #1e293b;
       }
       .grid {
         display: grid;
@@ -79,16 +82,17 @@
         gap: 16px;
       }
       .card {
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.1);
+        background: #fffdf8;
+        border: 2.5px solid #1e293b;
         border-radius: 18px;
-        padding: 22px 20px;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        padding: 20px;
+        box-shadow: 0 5px 0 #1e293b;
       }
       h2 {
         margin-top: 0;
         color: #0284c7;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
+        font-weight: 900;
       }
       ul {
         padding-left: 18px;
@@ -100,13 +104,13 @@
       }
       kbd {
         display: inline-block;
-        padding: 2px 7px;
-        border-radius: 6px;
-        background: #e2e8f0;
-        border: 1px solid rgba(15, 23, 42, 0.16);
-        color: #92400e;
-        font-size: 12px;
-        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: #f1ede2;
+        border: 1.5px solid #1e293b;
+        color: #0f172a;
+        font-size: 11.5px;
+        font-weight: 800;
       }
     </style>
   </head>
@@ -114,56 +118,56 @@
     <div class="wrap">
       <div class="nav">
         <a href="./index.html">← Play Game</a>
-        <a href="./guide.html" class="active">Game Guide</a>
-        <a href="./privacy.html">Privacy Policy</a>
-        <a href="./terms.html">Terms of Service</a>
-        <a href="./support.html">Support &amp; Data Deletion</a>
+        <a href="./guide.html" class="active">Field Manual</a>
+        <a href="./privacy.html">Privacy</a>
+        <a href="./terms.html">Terms</a>
+        <a href="./support.html">Support</a>
       </div>
 
       <div class="hero">
         <div>
           <h1>Machchhar: Raat ka Daaku — Field Manual</h1>
-          <p>Master laser-guided shots, silence DJ mosquitoes, and protect Uncle's sleep!</p>
+          <p>Master laser-guided shots, silence DJ mosquitoes, and guard Uncle's sleep!</p>
         </div>
         <a class="play-cta" href="./index.html">▶ PLAY NOW</a>
       </div>
 
       <div class="grid">
         <div class="card">
-          <h2>🎮 Controls (Desktop &amp; Mobile)</h2>
+          <h2>Controls (Desktop &amp; Android)</h2>
           <ul>
-            <li><strong>Desktop Mouse:</strong> Hover anywhere to lock the dotted laser sight; <strong>Left Click</strong> shoots instantly!</li>
+            <li><strong>Desktop Mouse:</strong> Hover anywhere to lock the dotted laser sight; <strong>Left Click</strong> fires instantly.</li>
             <li><strong>Desktop Keyboard:</strong> <kbd>A</kbd>/<kbd>D</kbd> or <kbd>←</kbd>/<kbd>→</kbd> to aim, <kbd>Space</kbd> to blast, <kbd>R</kbd> to tactical reload, <kbd>P</kbd>/<kbd>Esc</kbd> pause, <kbd>M</kbd> mute, <kbd>F</kbd> fullscreen.</li>
-            <li><strong>Android / Touch:</strong> Drag anywhere to aim the laser sight cleanly, then release to fire! Tap the ammo pill anytime to reload early.</li>
+            <li><strong>Android / Touch:</strong> Drag anywhere to sweep your laser sight cleanly, then release to fire. Tap the ammo pill anytime to reload early.</li>
           </ul>
         </div>
 
         <div class="card">
-          <h2>🦟 Mosquito Field Guide</h2>
+          <h2>Mosquito Squad</h2>
           <ul>
-            <li><strong>🦟 Buzzer (100 pts):</strong> 1 HP standard intruder.</li>
-            <li><strong>🎧 DJ Singer (300 pts):</strong> Plays catchy bedroom beats—blast mid-song for an instant <strong>MIC DROP!</strong></li>
-            <li><strong>🥷 Shadow Ninja (150 pts):</strong> Fast flyer that can juke your laser sight!</li>
-            <li><strong>🛡️ Armored Tank (250 pts):</strong> 2 HP helmeted tank; first hit stuns with a <em>BONK!</em></li>
-            <li><strong>👑 King Mosquito (1,000 pts):</strong> 6 HP Boss on Boss Nights!</li>
+            <li><strong>Buzzer (100 pts):</strong> 1 HP standard intruder.</li>
+            <li><strong>DJ Singer (300 pts):</strong> Plays bedroom beats — blast mid-song for an instant <strong>MIC DROP!</strong></li>
+            <li><strong>Shadow Ninja (150 pts):</strong> Fast flyer that dodges laser locks.</li>
+            <li><strong>Armored Tank (250 pts):</strong> 2 HP helmeted tank; first hit stuns with a <em>BONK!</em></li>
+            <li><strong>King Mosquito (1,000 pts):</strong> 6 HP Boss on Boss Nights.</li>
           </ul>
         </div>
 
         <div class="card">
-          <h2>⚡ Power-Ups &amp; Streaks</h2>
+          <h2>Power-Ups &amp; Fever Streaks</h2>
           <ul>
-            <li><strong>⚡ Zap Ammo:</strong> Unlimited rapid fire + chain blast (ignores reload &amp; deals 2 damage).</li>
-            <li><strong>🌀 Sleep Coil:</strong> Slows every mosquito in the room by 52% for easy snipes.</li>
-            <li><strong>💖 Deep Sleep:</strong> Restores +1 Sleep Heart when Uncle gets bitten.</li>
-            <li><strong>🔥 Fever Streaks:</strong> Every 5 combo kills awards <strong>+5 Sleep Coins</strong> automatically!</li>
+            <li><strong>Zap Ammo:</strong> Unlimited rapid shots + electric chain blast (2 damage).</li>
+            <li><strong>Sleep Coil:</strong> Slows every mosquito in the room by 52%.</li>
+            <li><strong>Deep Sleep:</strong> Restores +1 Sleep Heart.</li>
+            <li><strong>5x Fever Streak:</strong> Every 5 combo kills awards +5 Sleep Coins automatically.</li>
           </ul>
         </div>
 
         <div class="card">
-          <h2>🏆 Achievements &amp; Sleep Stamina</h2>
+          <h2>Trophies &amp; Fair Stamina</h2>
           <ul>
-            <li><strong>6 Unlockable Badges:</strong> First Swat, Fever Hands (8x combo), Mic Dropper, Sniper Uncle (85%+ accuracy), King Slayer, and Night Watchman (25+ in Endless). Each badge awards <strong>+10 🪙</strong>!</li>
-            <li><strong>Fair Stamina:</strong> Winning Campaign Nights costs <strong>0 stamina</strong>. Only failed attempts cost 1 bolt (auto-regenerates every 10 minutes), and <strong>Endless Night</strong> is always free.</li>
+            <li><strong>6 Career Trophies:</strong> First Swat, Fever Hands (8x combo), Mic Dropper, Sniper Uncle (85%+ accuracy), King Slayer, and Night Watchman (25+ Endless). Each awards <strong>+10 Coins</strong>.</li>
+            <li><strong>Fair Stamina:</strong> Winning Campaign Nights costs <strong>0 stamina</strong>. Only failed nights cost 1 bolt (auto-regenerates every 10 minutes), and <strong>Endless Night</strong> is always free.</li>
           </ul>
         </div>
       </div>

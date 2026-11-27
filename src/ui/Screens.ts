@@ -15,12 +15,22 @@ type ScreenName =
   | 'menu'
   | 'levels'
   | 'badges'
+  | 'guide'
   | 'legal'
   | 'no_stamina'
   | 'hud'
   | 'paused'
   | 'level_clear'
   | 'game_over';
+
+const SVG = {
+  book: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  soundOn: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+  soundOff: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`,
+  sun: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
+  moon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  pause: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`,
+};
 
 export class UIController {
   private root: HTMLElement;
@@ -45,11 +55,11 @@ export class UIController {
     document.documentElement.dataset.theme = theme;
     const themeBtn = document.getElementById('desktop-theme-btn');
     if (themeBtn) {
-      themeBtn.textContent = theme === 'light' ? '🌙 DARK' : '☀️ LIGHT';
+      themeBtn.textContent = theme === 'light' ? 'Dark' : 'Light';
     }
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
-      metaTheme.setAttribute('content', theme === 'light' ? '#f0f7ff' : '#0d1326');
+      metaTheme.setAttribute('content', theme === 'light' ? '#f6f3ea' : '#0b1020');
     }
   }
 
@@ -64,6 +74,35 @@ export class UIController {
       this.applyTheme();
     });
 
+    document.getElementById('top-nights-btn')?.addEventListener('click', () => {
+      audioEngine.unlock();
+      audioEngine.playUiClick();
+      if (this.currentScreen === 'hud') this.engine.pause();
+      this.renderLevelSelect();
+    });
+
+    document.getElementById('top-endless-btn')?.addEventListener('click', () => {
+      audioEngine.unlock();
+      audioEngine.playUiClick();
+      const opts = { ...this.loadout };
+      this.loadout = {};
+      this.engine.startEndlessMode(opts);
+    });
+
+    document.getElementById('top-guide-btn')?.addEventListener('click', () => {
+      audioEngine.unlock();
+      audioEngine.playUiClick();
+      if (this.currentScreen === 'hud') this.engine.pause();
+      this.renderGuideModal();
+    });
+
+    document.getElementById('top-badges-btn')?.addEventListener('click', () => {
+      audioEngine.unlock();
+      audioEngine.playUiClick();
+      if (this.currentScreen === 'hud') this.engine.pause();
+      this.renderBadgesModal();
+    });
+
     window.addEventListener('keydown', (e) => {
       if (e.code === 'KeyP' || e.code === 'Escape') {
         if (this.currentScreen === 'hud') {
@@ -75,6 +114,7 @@ export class UIController {
         } else if (
           this.currentScreen === 'levels' ||
           this.currentScreen === 'badges' ||
+          this.currentScreen === 'guide' ||
           this.currentScreen === 'legal' ||
           this.currentScreen === 'no_stamina'
         ) {
@@ -86,7 +126,7 @@ export class UIController {
         audioEngine.toggleMute();
         if (this.currentScreen === 'hud') {
           const btn = this.root.querySelector('#hud-mute-btn');
-          if (btn) btn.textContent = audioEngine.isMuted() ? '🔇' : '🔊';
+          if (btn) btn.innerHTML = audioEngine.isMuted() ? SVG.soundOff : SVG.soundOn;
         } else if (this.currentScreen === 'menu') {
           this.renderMenu();
         } else if (this.currentScreen === 'paused') {
@@ -97,7 +137,6 @@ export class UIController {
       }
     });
 
-    // Android Kotlin MainActivity dispatches `machchhar:back` on hardware/gesture Back press
     window.addEventListener('machchhar:back', () => {
       if (this.currentScreen === 'hud') {
         this.engine.pause();
@@ -126,36 +165,21 @@ export class UIController {
     if (this.toastTimerId !== null) {
       clearTimeout(this.toastTimerId);
     }
-    toast.textContent = `🏆 Unlocked: ${badge.icon} ${badge.title} (+10 🪙)`;
+    toast.textContent = `Trophy Unlocked: ${badge.title} (+10 Coins)`;
     toast.classList.remove('hidden');
-    this.updateDesktopCareerPanel();
+    this.updateTopBar();
     this.toastTimerId = window.setTimeout(() => {
       toast.classList.add('hidden');
       this.toastTimerId = null;
     }, 2800);
   }
 
-  private updateDesktopCareerPanel(): void {
-    const panel = document.getElementById('desktop-career-card');
-    if (!panel) return;
+  private updateTopBar(): void {
     const save = storage.getData();
-    const totalStars = storage.getTotalStars();
-    const maxStars = TOTAL_CAMPAIGN_LEVELS * 3;
-    const badgesHtml = ACHIEVEMENTS.map((a) => {
-      const unlocked = save.achievements.includes(a.id);
-      return `<span class="badge-chip-mini ${unlocked ? '' : 'locked'}" title="${a.desc}">${a.icon} ${a.title}</span>`;
-    }).join('');
-
-    panel.innerHTML = `
-      <h3 class="panel-heading">🏆 Career &amp; Badges</h3>
-      <div class="career-mini-grid">
-        <div class="career-mini-box"><strong>${save.highScore.toLocaleString()}</strong><span>Best Score</span></div>
-        <div class="career-mini-box"><strong>${save.bestEndlessScore.toLocaleString()}</strong><span>Endless Best</span></div>
-        <div class="career-mini-box"><strong>⭐ ${totalStars}/${maxStars}</strong><span>Campaign Stars</span></div>
-        <div class="career-mini-box"><strong>🪙 ${save.coins}</strong><span>Sleep Coins</span></div>
-      </div>
-      <div class="badge-chips-row">${badgesHtml}</div>
-    `;
+    const coinsEl = document.getElementById('top-coins-pill');
+    const bestEl = document.getElementById('top-best-pill');
+    if (coinsEl) coinsEl.textContent = `${save.coins} Coins`;
+    if (bestEl) bestEl.textContent = `Best ${save.highScore.toLocaleString()}`;
   }
 
   handlePhaseChange(phase: GamePhase, summary?: RunSummary): void {
@@ -182,7 +206,7 @@ export class UIController {
       void adManager.showBanner();
       this.renderMenu();
     }
-    this.updateDesktopCareerPanel();
+    this.updateTopBar();
   }
 
   updateHud(hud: HudSnapshot): void {
@@ -201,19 +225,19 @@ export class UIController {
       heartsEl.textContent = '❤️'.repeat(hud.hearts) + '🖤'.repeat(Math.max(0, hud.maxHearts - hud.hearts));
     }
     if (scoreEl) {
-      scoreEl.textContent = `⭐ ${hud.score.toLocaleString()}`;
+      scoreEl.textContent = `${hud.score.toLocaleString()} pts`;
     }
     if (goalEl) {
       goalEl.textContent =
         hud.mode === 'endless'
-          ? `🦟 ${hud.kills} Blasted`
+          ? `${hud.kills} Blasted`
           : `Night ${hud.levelId} · ${Math.min(hud.kills, hud.targetKills)}/${hud.targetKills}`;
     }
     if (ammoEl) {
       if (hud.racketMs > 0) {
-        ammoEl.innerHTML = `<span style="color:var(--accent-sky)">⚡ INFINITE ZAP</span>`;
+        ammoEl.innerHTML = `<span style="color:var(--accent-sky)">INFINITE ZAP</span>`;
       } else if (hud.reloadMs > 0) {
-        ammoEl.innerHTML = `<span style="color:#ea580c">🔄 RELOADING...</span>`;
+        ammoEl.innerHTML = `<span style="color:var(--accent-orange)">RELOADING...</span>`;
       } else {
         const bullets = '🔸'.repeat(hud.ammo) + '▫️'.repeat(Math.max(0, hud.maxAmmo - hud.ammo));
         ammoEl.textContent = hud.ammo < hud.maxAmmo ? `${bullets} ↻` : bullets;
@@ -221,7 +245,7 @@ export class UIController {
     }
     if (comboEl) {
       if (hud.combo >= 2) {
-        comboEl.textContent = `🔥 x${hud.combo} COMBO`;
+        comboEl.textContent = `x${hud.combo} COMBO`;
         comboEl.classList.remove('hidden');
       } else {
         comboEl.classList.add('hidden');
@@ -238,13 +262,13 @@ export class UIController {
     if (tagsEl) {
       const tags: string[] = [];
       if (hud.racketMs > 0) {
-        tags.push(`<span class="powerup-tag" style="color:var(--accent-sky)">⚡ ZAP ${(hud.racketMs / 1000).toFixed(1)}s</span>`);
+        tags.push(`<span class="powerup-tag" style="color:var(--accent-sky)">ZAP ${(hud.racketMs / 1000).toFixed(1)}s</span>`);
       }
       if (hud.coilMs > 0) {
-        tags.push(`<span class="powerup-tag" style="color:#7c3aed">🌀 COIL ${(hud.coilMs / 1000).toFixed(1)}s</span>`);
+        tags.push(`<span class="powerup-tag" style="color:#7c3aed">COIL ${(hud.coilMs / 1000).toFixed(1)}s</span>`);
       }
       if (hud.scoreMultiplier > 1) {
-        tags.push(`<span class="powerup-tag" style="color:var(--accent-gold)">✨ ${hud.scoreMultiplier}X SCORE</span>`);
+        tags.push(`<span class="powerup-tag" style="color:var(--accent-gold-ink)">${hud.scoreMultiplier}X SCORE</span>`);
       }
       tagsEl.innerHTML = tags.join('');
     }
@@ -278,13 +302,14 @@ export class UIController {
   private renderMenu(): void {
     this.stopStaminaTicker();
     this.currentScreen = 'menu';
-    this.updateDesktopCareerPanel();
+    this.updateTopBar();
     const save = storage.getData();
     const stam = storage.getStaminaInfo();
     const nextLevel = Math.min(save.highestUnlockedLevel, TOTAL_CAMPAIGN_LEVELS);
     const nextCfg = getLevelConfig(nextLevel);
     const dda = storage.computeDdaModifiers(nextLevel);
-    const muteIcon = audioEngine.isMuted() ? '🔇' : '🔊';
+    const soundIcon = audioEngine.isMuted() ? SVG.soundOff : SVG.soundOn;
+    const themeIcon = storage.getTheme() === 'light' ? SVG.moon : SVG.sun;
 
     const stamRegenStr =
       stam.stamina < stam.max ? ` (${this.formatStaminaCountdown(stam.msUntilNext)})` : '';
@@ -297,26 +322,27 @@ export class UIController {
         </div>
         <div class="hud-actions">
           ${save.winStreak >= 2 ? `<div class="hud-pill" style="color:var(--accent-pink)">🔥 ${save.winStreak}</div>` : ''}
-          <button id="menu-theme-btn" class="icon-btn" title="Switch Light/Dark Theme">${storage.getTheme() === 'light' ? '🌙' : '☀️'}</button>
-          <button id="menu-guide-btn" class="icon-btn" title="Game Guide">📖</button>
-          <button id="menu-mute-btn" class="icon-btn" title="Toggle Sound (M)">${muteIcon}</button>
+          <button id="menu-theme-btn" class="icon-btn" title="Switch Light / Dark">${themeIcon}</button>
+          <button id="menu-guide-btn" class="icon-btn" title="Field Guide">${SVG.book}</button>
+          <button id="menu-mute-btn" class="icon-btn" title="Toggle Sound (M)">${soundIcon}</button>
         </div>
       </div>
-      <div class="screen-backdrop">
+
+      <div class="screen-backdrop menu-dock">
         <div class="card">
           <div class="game-badge">
-            ${nextCfg.role === 'spike' ? '🔥 HARD NIGHT AHEAD' : nextCfg.role === 'boss' ? '👑 BOSS NIGHT' : '🦟 RAAT KA DAAKU!'}
+            ${nextCfg.role === 'spike' ? 'HARD NIGHT AHEAD' : nextCfg.role === 'boss' ? 'BOSS NIGHT' : 'RAAT KA DAAKU'}
           </div>
           <h1 class="title-main">Machchhar</h1>
           <p class="subtitle">
-            <strong style="color:var(--accent-gold)">Raat ka Daaku</strong> — Aim &amp; silence the singing mosquitoes!
-            ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:var(--accent-pink)">🌶️ Win Streak: Speed Boosted!</strong>' : ''}
+            Guard Uncle's midnight sleep — aim &amp; silence the singing swarm!
+            ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:var(--accent-pink)">Win Streak Active: Speed Boosted!</strong>' : ''}
           </p>
 
           <div class="stats-row">
             <div class="stat-box"><strong>${save.highScore.toLocaleString()}</strong><span>Best Score</span></div>
             <div class="stat-box"><strong>${save.totalSwatted}</strong><span>Blasted</span></div>
-            <div class="stat-box"><strong>${save.achievements.length}/${ACHIEVEMENTS.length} 🏆</strong><span>Badges</span></div>
+            <div class="stat-box"><strong>${save.achievements.length}/${ACHIEVEMENTS.length}</strong><span>Trophies</span></div>
           </div>
 
           <div class="booster-bar">
@@ -337,25 +363,25 @@ export class UIController {
           <div class="btn-stack">
             <button id="play-btn" class="btn-primary">▶ PLAY NIGHT ${nextLevel}</button>
             <div class="btn-row">
-              <button id="levels-btn" class="btn-secondary">🗺️ NIGHTS</button>
-              <button id="endless-btn" class="btn-secondary">🌙 ENDLESS</button>
+              <button id="levels-btn" class="btn-secondary">NIGHTS</button>
+              <button id="endless-btn" class="btn-secondary">ENDLESS</button>
             </div>
             <button id="boost-ad-btn" class="btn-reward">
               ${
                 this.loadout.scoreMultiplier === 2 && this.loadout.starterPowerUp === 'racket'
-                  ? '⚡ ZAP + 2X SCORE ARMED!'
-                  : '⚡ FREE ZAP + 2X SCORE (WATCH AD)'
+                  ? 'ZAP + 2X SCORE ARMED!'
+                  : 'FREE ZAP + 2X SCORE (WATCH AD)'
               }
             </button>
           </div>
           <div class="legal-footer">
-            <button id="menu-badges-btn" class="link-btn">🏆 Badges</button>
+            <button id="menu-badges-btn" class="link-btn">Trophies</button>
             <span>·</span>
             <button id="legal-privacy-btn" class="link-btn">Privacy</button>
             <span>·</span>
             <button id="legal-terms-btn" class="link-btn">Terms</button>
             <span>·</span>
-            <button id="legal-support-btn" class="link-btn">${nativeBridge.hasAndroidBridge() ? '⚙️ Settings' : 'Support'}</button>
+            <button id="legal-support-btn" class="link-btn">${nativeBridge.hasAndroidBridge() ? 'Settings' : 'Support'}</button>
           </div>
         </div>
       </div>
@@ -393,7 +419,7 @@ export class UIController {
       audioEngine.playUiClick();
       nativeBridge.haptic('ui');
       if (!nativeBridge.openNativeGuide()) {
-        window.open('./guide.html', '_blank', 'noopener,noreferrer');
+        this.renderGuideModal();
       }
     });
 
@@ -460,6 +486,37 @@ export class UIController {
     });
   }
 
+  private renderGuideModal(): void {
+    this.stopStaminaTicker();
+    this.currentScreen = 'guide';
+    this.root.innerHTML = `
+      <div class="screen-backdrop">
+        <div class="card">
+          <div class="game-badge">FIELD GUIDE</div>
+          <h2>Mosquito Squad &amp; Gear</h2>
+          <p class="subtitle">Spot enemy traits &amp; power-ups before they wake Uncle.</p>
+          <div class="guide-modal-list">
+            <div class="guide-row"><span>🦟</span><div><strong>Buzzer (100 pts)</strong><small>1 HP standard pest diving toward bed.</small></div></div>
+            <div class="guide-row"><span>🎧</span><div><strong>DJ Singer (300 pts)</strong><small>Sings loud beats — blast mid-song for MIC DROP!</small></div></div>
+            <div class="guide-row"><span>🥷</span><div><strong>Shadow Ninja (150 pts)</strong><small>Fast flyer that dodges laser locks.</small></div></div>
+            <div class="guide-row"><span>🛡️</span><div><strong>Armored Tank (250 pts)</strong><small>2 HP — first hit stuns with a BONK.</small></div></div>
+            <div class="guide-row"><span>👑</span><div><strong>King Boss (1,000 pts)</strong><small>6 HP giant boss on Boss Nights.</small></div></div>
+            <div class="guide-row"><span>⚡</span><div><strong>Zap / Coil / Heart</strong><small>Infinite rapid fire, 52% room slow, or +1 heart.</small></div></div>
+          </div>
+          <div class="btn-stack">
+            <a class="btn-secondary" style="text-decoration:none;display:block" href="./guide.html" target="_blank" rel="noopener noreferrer">OPEN FULL MANUAL</a>
+            <button id="guide-back-btn" class="btn-primary">← BACK TO GAME</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.root.querySelector('#guide-back-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderMenu();
+    });
+  }
+
   private renderBadgesModal(): void {
     this.stopStaminaTicker();
     this.currentScreen = 'badges';
@@ -521,7 +578,7 @@ export class UIController {
         title: 'Support & Data Deletion',
         link: './support.html',
         body: `
-          <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:var(--link-color)">yuvasamrajyaofficial@gmail.com</a></p>
+          <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:var(--accent-sky)">yuvasamrajyaofficial@gmail.com</a></p>
           <p><strong>Package:</strong> <code>com.mct.machchhar</code></p>
           <p><strong>Clear Data:</strong> Android Settings → Apps → Machchhar: Raat ka Daaku → Storage → Clear Data (or uninstall).</p>
         `,
@@ -541,7 +598,7 @@ export class UIController {
           </div>
           <div class="legal-body">${current.body}</div>
           <div class="btn-stack">
-            <a class="btn-secondary" style="text-decoration:none;display:block" href="${current.link}" target="_blank" rel="noopener noreferrer">🌐 OPEN FULL PAGE</a>
+            <a class="btn-secondary" style="text-decoration:none;display:block" href="${current.link}" target="_blank" rel="noopener noreferrer">OPEN FULL PAGE</a>
             <button id="legal-back-btn" class="btn-primary">← BACK TO MENU</button>
           </div>
         </div>
@@ -596,18 +653,18 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:var(--accent-pink);border-color:rgba(225,29,72,0.35);background:rgba(225,29,72,0.1)">SLEEPY HANDS!</div>
+          <div class="game-badge" style="color:var(--accent-pink);background:#ffe4e6">SLEEPY HANDS</div>
           <h2>Out of Sleep Stamina</h2>
           <p class="subtitle">
             Next bolt regenerates in <strong>${this.formatStaminaCountdown(stam.msUntilNext)}</strong>.<br>
             Refill instantly to tackle <strong>Night ${targetLevelId}</strong>!
           </p>
           <div class="btn-stack">
-            <button id="refill-ad-btn" class="btn-reward">⚡ REFILL 5/5 STAMINA (WATCH AD)</button>
+            <button id="refill-ad-btn" class="btn-reward">REFILL 5/5 STAMINA (WATCH AD)</button>
             <button id="refill-coins-btn" class="btn-primary" ${save.coins < STAMINA_REFILL_COST ? 'disabled' : ''}>
-              🪙 REFILL WITH ${STAMINA_REFILL_COST} COINS (You: ${save.coins})
+              REFILL WITH ${STAMINA_REFILL_COST} COINS (You: ${save.coins})
             </button>
-            <button id="nostam-endless-btn" class="btn-secondary">🌙 PLAY ENDLESS (FREE)</button>
+            <button id="nostam-endless-btn" class="btn-secondary">PLAY ENDLESS (FREE)</button>
             <button id="nostam-back-btn" class="btn-secondary">← BACK</button>
           </div>
         </div>
@@ -700,7 +757,7 @@ export class UIController {
   }
 
   private renderHudShell(): void {
-    const muteIcon = audioEngine.isMuted() ? '🔇' : '🔊';
+    const soundIcon = audioEngine.isMuted() ? SVG.soundOff : SVG.soundOn;
     this.root.innerHTML = `
       <div class="hud-bar">
         <div class="hud-group">
@@ -710,11 +767,11 @@ export class UIController {
         </div>
         <div class="hud-group" style="align-items:flex-end">
           <div class="hud-actions">
-            <div id="hud-score" class="hud-pill">⭐ 0</div>
-            <button id="hud-mute-btn" class="icon-btn" title="Sound (M)">${muteIcon}</button>
-            <button id="hud-pause-btn" class="icon-btn" title="Pause (P)">⏸</button>
+            <div id="hud-score" class="hud-pill">0 pts</div>
+            <button id="hud-mute-btn" class="icon-btn" title="Sound (M)">${soundIcon}</button>
+            <button id="hud-pause-btn" class="icon-btn" title="Pause (P)">${SVG.pause}</button>
           </div>
-          <div id="hud-combo" class="hud-pill hidden" style="color:var(--accent-gold)">🔥 x2 COMBO</div>
+          <div id="hud-combo" class="hud-pill hidden" style="color:var(--accent-gold-ink)">x2 COMBO</div>
         </div>
       </div>
       <div class="hud-center-info">
@@ -735,7 +792,7 @@ export class UIController {
       audioEngine.unlock();
       const muted = audioEngine.toggleMute();
       const btn = this.root.querySelector('#hud-mute-btn');
-      if (btn) btn.textContent = muted ? '🔇' : '🔊';
+      if (btn) btn.innerHTML = muted ? SVG.soundOff : SVG.soundOn;
     });
 
     this.root.querySelector('#hud-pause-btn')?.addEventListener('click', (e) => {
@@ -746,7 +803,7 @@ export class UIController {
   }
 
   private renderPauseModal(): void {
-    const muteText = audioEngine.isMuted() ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+    const muteText = audioEngine.isMuted() ? 'SOUND: OFF' : 'SOUND: ON';
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
@@ -758,10 +815,10 @@ export class UIController {
             <button id="pause-mute-btn" class="btn-secondary">${muteText}</button>
             ${
               nativeBridge.hasAndroidBridge()
-                ? `<button id="pause-settings-btn" class="btn-secondary">⚙️ ANDROID SETTINGS</button>`
+                ? `<button id="pause-settings-btn" class="btn-secondary">ANDROID SETTINGS</button>`
                 : ''
             }
-            <button id="pause-menu-btn" class="btn-danger">🏠 MAIN MENU</button>
+            <button id="pause-menu-btn" class="btn-danger">MAIN MENU</button>
           </div>
         </div>
       </div>
@@ -793,7 +850,7 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge">SWEET DREAMS!</div>
+          <div class="game-badge">SWEET DREAMS</div>
           <h2>${s.levelName} Cleared!</h2>
           <div class="stars-display">${starsHtml}</div>
           <div class="stats-row">
@@ -803,12 +860,12 @@ export class UIController {
           </div>
           <div class="btn-stack">
             <button id="next-level-btn" class="btn-primary">▶ NEXT NIGHT (${s.levelId + 1})</button>
-            <button id="double-coins-btn" class="btn-reward">🪙 DOUBLE COINS (+${s.coinsEarned}) — WATCH AD</button>
+            <button id="double-coins-btn" class="btn-reward">DOUBLE COINS (+${s.coinsEarned}) — WATCH AD</button>
             <div class="btn-row">
-              <button id="replay-level-btn" class="btn-secondary">🔁 REPLAY</button>
-              <button id="clear-share-btn" class="btn-secondary">📤 SHARE</button>
+              <button id="replay-level-btn" class="btn-secondary">REPLAY</button>
+              <button id="clear-share-btn" class="btn-secondary">SHARE</button>
             </div>
-            <button id="clear-menu-btn" class="btn-secondary">🏠 MAIN MENU</button>
+            <button id="clear-menu-btn" class="btn-secondary">MAIN MENU</button>
           </div>
         </div>
       </div>
@@ -837,10 +894,10 @@ export class UIController {
       if (rewarded) {
         storage.addCoins(s.coinsEarned);
         audioEngine.playPowerUp('pillow');
-        this.updateDesktopCareerPanel();
+        this.updateTopBar();
         if (btn) {
           btn.disabled = true;
-          btn.textContent = `✅ +${s.coinsEarned} BONUS COINS ADDED!`;
+          btn.textContent = `+${s.coinsEarned} BONUS COINS ADDED!`;
         }
       }
     });
@@ -859,8 +916,8 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:var(--accent-pink);border-color:rgba(225,29,72,0.35);background:rgba(225,29,72,0.1)">
-            ${isNearMiss ? `🔥 SO CLOSE! ONLY ${s.remainingToWin} LEFT!` : 'ALARM RINGING!'}
+          <div class="game-badge" style="color:var(--accent-pink);background:#ffe4e6">
+            ${isNearMiss ? `SO CLOSE! ONLY ${s.remainingToWin} LEFT` : 'ALARM RINGING'}
           </div>
           <h2>He Woke Up Grumpy!</h2>
           <p class="subtitle">
@@ -878,13 +935,13 @@ export class UIController {
           <div class="btn-stack">
             ${
               !s.revivedUsed
-                ? `<button id="revive-ad-btn" class="btn-reward">💖 REVIVE +2 HEARTS &amp; ZAP (WATCH AD)</button>`
+                ? `<button id="revive-ad-btn" class="btn-reward">REVIVE +2 HEARTS &amp; ZAP (WATCH AD)</button>`
                 : ''
             }
-            <button id="retry-btn" class="btn-primary">🔄 TRY AGAIN</button>
+            <button id="retry-btn" class="btn-primary">TRY AGAIN</button>
             <div class="btn-row">
-              <button id="gameover-share-btn" class="btn-secondary">📤 SHARE</button>
-              <button id="gameover-menu-btn" class="btn-secondary">🏠 MENU</button>
+              <button id="gameover-share-btn" class="btn-secondary">SHARE</button>
+              <button id="gameover-menu-btn" class="btn-secondary">MENU</button>
             </div>
           </div>
         </div>
