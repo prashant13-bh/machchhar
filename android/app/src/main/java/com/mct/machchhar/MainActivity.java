@@ -1,4 +1,4 @@
-package com.sleepswatter.game;
+package com.mct.machchhar;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Machchhar: Raat ka Daaku</string>
     <string name="title_activity_main">Machchhar: Raat ka Daaku</string>
-    <string name="package_name">com.sleepswatter.game</string>
-    <string name="custom_url_scheme">com.sleepswatter.game</string>
+    <string name="package_name">com.mct.machchhar</string>
+    <string name="custom_url_scheme">com.mct.machchhar</string>
 </resources>

@@ -7,10 +7,10 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.sleepswatter.game"
+    namespace "com.mct.machchhar"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.sleepswatter.game"
+        applicationId "com.mct.machchhar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

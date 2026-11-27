@@ -314,7 +314,7 @@ export class UIController {
         link: './support.html',
         body: `
           <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:#38bdf8">yuvasamrajyaofficial@gmail.com</a></p>
-          <p><strong>Package:</strong> <code>com.sleepswatter.game</code></p>
+          <p><strong>Package:</strong> <code>com.mct.machchhar</code></p>
           <p><strong>Clear Data:</strong> Android Settings → Apps → Machchhar: Raat ka Daaku → Storage → Clear Data (or uninstall).</p>
         `,
       },
