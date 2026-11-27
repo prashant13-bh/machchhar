@@ -113,16 +113,21 @@ body {
   transform: scale(0.92);
 }
 
+.hidden {
+  display: none !important;
+}
+
 .hud-center-info {
   position: absolute;
-  top: calc(56px + env(safe-area-inset-top));
+  bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 6px;
   pointer-events: none;
+  z-index: 5;
 }
 
 .boss-bar-wrap {
@@ -536,7 +541,7 @@ button {
   }
 
   .hud-center-info {
-    top: calc(92px + env(safe-area-inset-top));
+    bottom: calc(10px + env(safe-area-inset-bottom));
   }
 
   .screen-backdrop {
