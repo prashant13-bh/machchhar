@@ -1,13 +1,23 @@
 {
   "name": "Machchhar: Raat ka Daaku",
   "short_name": "Machchhar",
-  "description": "Swat buzzing mosquitoes before they wake the sleeper!",
+  "description": "Aim from bed and blast buzzing & singing mosquitoes!",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0d1326",
   "theme_color": "#0d1326",
   "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
     {
       "src": "./favicon.svg",
       "sizes": "any",

@@ -65,8 +65,12 @@ Because the app integrates **Google AdMob (`@capacitor-community/admob`)** and s
 
 ---
 
-## 5. Required Graphic Assets Checklist (Upload in Play Console)
+## 5. Generated Graphic Assets (Ready to Upload in `store-assets/`)
 
-- **App Icon**: `512 × 512 px` PNG (up to 1 MB)
-- **Feature Graphic**: `1024 × 500 px` PNG/JPG
-- **Phone Screenshots**: At least 2–4 portrait screenshots (`1080 × 1920 px` or `9:16` captured from gameplay!)
+- **App Icon (`512 × 512 px` PNG)**: `store-assets/playstore-icon-512x512.png`
+- **Feature Graphic (`1024 × 500 px` PNG)**: `store-assets/playstore-feature-1024x500.png`
+- **Phone Screenshots (`1080 × 1920 px` PNG)**:
+  - `store-assets/screenshot-1-1080x1920.png` (*Aim & Blast From Bed!*)
+  - `store-assets/screenshot-2-1080x1920.png` (*Silence the Singing Swarm!*)
+  - `store-assets/screenshot-3-1080x1920.png` (*Epic Boss Nights & Power-Ups!*)
+- **Android Launcher Icons**: Updated across `android/app/src/main/res/mipmap-*` (`mdpi` through `xxxhdpi`) and web PWA icons (`public/icon-192.png`, `public/icon-512.png`).
