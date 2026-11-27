@@ -22,7 +22,7 @@ export interface LevelConfig {
   speedMultiplier: number;
   dodgeChance: number;
   weights: SpawnWeights;
-  /** Song indices (0..7) sung by Singing Mosquitoes in this level */
+  /** Song indices (0..3 -> singer-1..4.mp3) sung by Singing Mosquitoes in this level */
   singerSongs: number[];
   isBossLevel: boolean;
   maxHearts: number;
@@ -135,7 +135,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.2,
     dodgeChance: 0.25,
     weights: { normal: 34, ninja: 26, tank: 20, singer: 20 },
-    singerSongs: [4, 3, 2],
+    singerSongs: [2, 3, 0],
     isBossLevel: true,
     maxHearts: 4,
     powerUpChance: 0.24,
@@ -151,7 +151,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.18,
     dodgeChance: 0.2,
     weights: { normal: 30, ninja: 30, tank: 14, singer: 26 },
-    singerSongs: [5, 1, 3],
+    singerSongs: [1, 3],
     isBossLevel: false,
     maxHearts: 4,
     powerUpChance: 0.22,
@@ -167,7 +167,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.3,
     dodgeChance: 0.3,
     weights: { normal: 22, ninja: 28, tank: 32, singer: 18 },
-    singerSongs: [6, 2, 3],
+    singerSongs: [2, 3],
     isBossLevel: false,
     maxHearts: 4,
     powerUpChance: 0.2,
@@ -183,7 +183,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.28,
     dodgeChance: 0.24,
     weights: { normal: 24, ninja: 30, tank: 22, singer: 24 },
-    singerSongs: [3, 4, 7],
+    singerSongs: [0, 3],
     isBossLevel: false,
     maxHearts: 4,
     powerUpChance: 0.25,
@@ -199,7 +199,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.38,
     dodgeChance: 0.34,
     weights: { normal: 18, ninja: 36, tank: 24, singer: 22 },
-    singerSongs: [1, 3, 5, 6],
+    singerSongs: [1, 2, 3],
     isBossLevel: false,
     maxHearts: 4,
     powerUpChance: 0.24,
@@ -215,7 +215,7 @@ const HANDCRAFTED_LEVELS: LevelConfig[] = [
     speedMultiplier: 1.45,
     dodgeChance: 0.35,
     weights: { normal: 20, ninja: 32, tank: 26, singer: 22 },
-    singerSongs: [0, 1, 2, 3, 4, 5, 6, 7],
+    singerSongs: [0, 1, 2, 3],
     isBossLevel: true,
     maxHearts: 5,
     powerUpChance: 0.28,
@@ -244,7 +244,7 @@ export function getLevelConfig(levelId: number): LevelConfig {
     speedMultiplier: Math.min(1.85, 1.45 + extra * 0.04),
     dodgeChance: Math.min(0.42, 0.32 + extra * 0.015),
     weights: { normal: 20, ninja: 34, tank: 24, singer: 22 },
-    singerSongs: [(levelId - 1) % 8, (levelId + 2) % 8, 3],
+    singerSongs: [(levelId - 1) % 4, levelId % 4, 3],
     isBossLevel: isBoss,
     maxHearts: isBoss ? 5 : 4,
     powerUpChance: 0.26,

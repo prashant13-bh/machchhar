@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.sleepswatter.game',
-  appName: 'Sleep Swatter',
+  appName: 'Machchhar: Raat ka Daaku',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

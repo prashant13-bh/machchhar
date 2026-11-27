@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Sleep Swatter</string>
-    <string name="title_activity_main">Sleep Swatter</string>
+    <string name="app_name">Machchhar: Raat ka Daaku</string>
+    <string name="title_activity_main">Machchhar: Raat ka Daaku</string>
     <string name="package_name">com.sleepswatter.game</string>
     <string name="custom_url_scheme">com.sleepswatter.game</string>
 </resources>

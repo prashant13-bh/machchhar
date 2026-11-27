@@ -166,11 +166,11 @@ export class UIController {
       <div class="screen-backdrop">
         <div class="card">
           <div class="game-badge">
-            ${nextCfg.role === 'spike' ? '🔥 HARD NIGHT AHEAD' : nextCfg.role === 'boss' ? '👑 BOSS NIGHT' : '🦟 DON\'T WAKE UNCLE!'}
+            ${nextCfg.role === 'spike' ? '🔥 HARD NIGHT AHEAD' : nextCfg.role === 'boss' ? '👑 BOSS NIGHT' : '🦟 RAAT KA DAAKU!'}
           </div>
-          <h1 class="title-main">Sleep Swatter</h1>
+          <h1 class="title-main">Machchhar</h1>
           <p class="subtitle">
-            Aim the dotted sight from bed &amp; silence the singing mosquitoes!
+            <strong style="color:#ffd166">Raat ka Daaku</strong> — Aim &amp; silence the singing mosquitoes!
             ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:#fb7185">🌶️ Win Streak: Speed Boosted!</strong>' : ''}
           </p>
 
@@ -205,6 +205,13 @@ export class UIController {
                   : '⚡ FREE ZAP + 2X SCORE (WATCH AD)'
               }
             </button>
+          </div>
+          <div class="legal-footer">
+            <button id="legal-privacy-btn" class="link-btn">Privacy Policy</button>
+            <span>·</span>
+            <button id="legal-terms-btn" class="link-btn">Terms</button>
+            <span>·</span>
+            <button id="legal-support-btn" class="link-btn">Support</button>
           </div>
         </div>
       </div>
@@ -266,6 +273,84 @@ export class UIController {
         audioEngine.playPowerUp('racket');
         this.renderMenu();
       }
+    });
+
+    this.root.querySelector('#legal-privacy-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderLegalModal('privacy');
+    });
+    this.root.querySelector('#legal-terms-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderLegalModal('terms');
+    });
+    this.root.querySelector('#legal-support-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderLegalModal('support');
+    });
+  }
+
+  private renderLegalModal(tab: 'privacy' | 'terms' | 'support'): void {
+    this.stopStaminaTicker();
+    const contentMap: Record<'privacy' | 'terms' | 'support', { title: string; body: string; link: string }> = {
+      privacy: {
+        title: 'Privacy Policy',
+        link: './privacy.html',
+        body: `
+          <p><strong>Machchhar: Raat ka Daaku</strong> stores your levels, scores, coins, and stamina locally on your device only—no account or login is required.</p>
+          <p>Free gameplay is supported by <strong>Google AdMob / AdSense</strong>, which may process your device Advertising ID, IP region, and ad diagnostics to deliver and measure ads.</p>
+          <p>You can reset or opt out of personalized ads anytime in your device's Google Ads settings, or clear local progress via device App Storage.</p>
+        `,
+      },
+      terms: {
+        title: 'Terms of Service',
+        link: './terms.html',
+        body: `
+          <p>Machchhar: Raat ka Daaku is provided for personal entertainment. In-game coins, stamina, and boosters have no cash value and cannot be exchanged for real money.</p>
+          <p>Third-party advertisements displayed in the app are governed by their respective ad network terms.</p>
+        `,
+      },
+      support: {
+        title: 'Support & Data Deletion',
+        link: './support.html',
+        body: `
+          <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:#38bdf8">yuvasamrajyaofficial@gmail.com</a></p>
+          <p><strong>Package:</strong> <code>com.sleepswatter.game</code></p>
+          <p><strong>Clear Data:</strong> Android Settings → Apps → Machchhar: Raat ka Daaku → Storage → Clear Data (or uninstall).</p>
+        `,
+      },
+    };
+
+    const current = contentMap[tab];
+    this.root.innerHTML = `
+      <div class="screen-backdrop">
+        <div class="card">
+          <div class="game-badge">LEGAL &amp; SUPPORT</div>
+          <h2>${current.title}</h2>
+          <div class="legal-tabs">
+            <button data-tab="privacy" class="booster-chip ${tab === 'privacy' ? 'active' : ''}">Privacy</button>
+            <button data-tab="terms" class="booster-chip ${tab === 'terms' ? 'active' : ''}">Terms</button>
+            <button data-tab="support" class="booster-chip ${tab === 'support' ? 'active' : ''}">Support</button>
+          </div>
+          <div class="legal-body">${current.body}</div>
+          <div class="btn-stack">
+            <a class="btn-secondary" style="text-decoration:none;display:block" href="${current.link}" target="_blank" rel="noopener noreferrer">🌐 OPEN FULL PAGE</a>
+            <button id="legal-back-btn" class="btn-primary">← BACK TO MENU</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.root.querySelectorAll('.legal-tabs button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        audioEngine.playUiClick();
+        const nextTab = (btn as HTMLElement).dataset.tab as 'privacy' | 'terms' | 'support';
+        this.renderLegalModal(nextTab);
+      });
+    });
+
+    this.root.querySelector('#legal-back-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderMenu();
     });
   }
 

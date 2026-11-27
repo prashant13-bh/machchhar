@@ -5,7 +5,7 @@ import {
   type MosquitoKind,
   type PowerUpKind,
 } from '../config/levels';
-import { audioEngine, type QuipCategory } from '../services/AudioEngine';
+import { audioEngine } from '../services/AudioEngine';
 import { storage, type DdaModifiers } from '../services/Storage';
 import {
   WORLD_HEIGHT,
@@ -517,9 +517,6 @@ export class GameEngine {
         if (killedBoss || isZap || (this.combo >= 5 && this.combo % 5 === 0)) {
           const yeLe = audioEngine.playMeme('memeYeLe', killedBoss);
           if (yeLe) this.sleeper.speechBubble = { text: yeLe, lifeMs: 1100 };
-        } else {
-          const quipCat: QuipCategory = killedSinger ? 'singer' : 'hit';
-          this.sayUncleQuip(quipCat, killedSinger);
         }
       }
       this.emitHud();
@@ -552,13 +549,6 @@ export class GameEngine {
       isZap,
     });
     this.emitHud();
-  }
-
-  private sayUncleQuip(category: QuipCategory, force = false): void {
-    const line = audioEngine.triggerComedyQuip(category, force);
-    if (line) {
-      this.sleeper.speechBubble = { text: line, lifeMs: 1300 };
-    }
   }
 
   private pointHitsCircle(
@@ -739,7 +729,8 @@ export class GameEngine {
     this.sleeper.isAiming = false;
     this.sleeper.mood = 'awake';
     audioEngine.playGameOverAlarm();
-    this.sayUncleQuip('gameover', true);
+    const panic = audioEngine.playMeme('memeBachaLo', true);
+    if (panic) this.sleeper.speechBubble = { text: panic, lifeMs: 1600 };
 
     const accuracy = this.totalShots > 0 ? Math.round((this.hitShots / this.totalShots) * 100) : 0;
     const coinsEarned = Math.max(4, Math.round(this.kills * 1.2));
