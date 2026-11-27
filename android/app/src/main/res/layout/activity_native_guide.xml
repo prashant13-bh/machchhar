@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A1022"
+    android:background="#F4F7FB"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
     android:padding="16dp">
@@ -22,7 +22,7 @@
             android:paddingHorizontal="14dp"
             android:text="← Back"
             android:textAllCaps="false"
-            android:textColor="#BAE6FD"
+            android:textColor="#0369A1"
             android:textStyle="bold" />
 
         <TextView
@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:gravity="end"
             android:text="FIELD MANUAL"
-            android:textColor="#FFD166"
+            android:textColor="#D97706"
             android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -59,7 +59,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎯 Fast Aim &amp; Reload"
-                    android:textColor="#FFD166"
+                    android:textColor="#B45309"
                     android:textSize="17sp"
                     android:textStyle="bold" />
 
@@ -69,7 +69,7 @@
                     android:layout_marginTop="6dp"
                     android:lineSpacingExtra="4dp"
                     android:text="• Touch and drag anywhere on the screen to sweep the dotted laser sight.\n• Release your finger to blast locked targets instantly!\n• Tap the top-left 6-shot ammo pill anytime to reload early between waves."
-                    android:textColor="#E2E8F0"
+                    android:textColor="#334155"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -85,7 +85,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🦟 Mosquito Squad"
-                    android:textColor="#7DD3FC"
+                    android:textColor="#0284C7"
                     android:textSize="17sp"
                     android:textStyle="bold" />
 
@@ -95,7 +95,7 @@
                     android:layout_marginTop="6dp"
                     android:lineSpacingExtra="4dp"
                     android:text="🦟 Buzzer (1 HP): Standard pest (100 pts).\n🎧 DJ Singer (1 HP): Sings loudly — hit mid-song for MIC DROP (300 pts)!\n🥷 Shadow Ninja (1 HP): Agile flyer that dodges laser locks.\n🛡️ Armored Tank (2 HP): First hit stuns with a BONK!\n👑 King Mosquito (6 HP): Giant boss on Boss Nights (1,000 pts)!"
-                    android:textColor="#E2E8F0"
+                    android:textColor="#334155"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -111,7 +111,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="⚡ Power-Ups &amp; Fever Streaks"
-                    android:textColor="#4ADE80"
+                    android:textColor="#15803D"
                     android:textSize="17sp"
                     android:textStyle="bold" />
 
@@ -121,7 +121,7 @@
                     android:layout_marginTop="6dp"
                     android:lineSpacingExtra="4dp"
                     android:text="⚡ Zap Ammo: Infinite rapid ammo + chain hits (2 dmg).\n🌀 Sleep Coil: Slows every mosquito by 52%.\n💖 Deep Sleep: Restores +1 Sleep Heart.\n🔥 Every 5x combo streak awards +5 Sleep Coins!"
-                    android:textColor="#E2E8F0"
+                    android:textColor="#334155"
                     android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>

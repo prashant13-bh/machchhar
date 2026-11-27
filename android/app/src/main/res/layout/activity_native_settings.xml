@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A1022"
+    android:background="#F4F7FB"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
     android:padding="16dp">
@@ -22,7 +22,7 @@
             android:paddingHorizontal="14dp"
             android:text="← Back"
             android:textAllCaps="false"
-            android:textColor="#BAE6FD"
+            android:textColor="#0369A1"
             android:textStyle="bold" />
 
         <TextView
@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:gravity="end"
             android:text="ANDROID SETTINGS"
-            android:textColor="#FFD166"
+            android:textColor="#D97706"
             android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -66,7 +66,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="📳 Haptic Vibration Feedback"
-                        android:textColor="#F8FAFC"
+                        android:textColor="#0F172A"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -75,7 +75,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Crisp pulses on blaster shots, hits &amp; bites"
-                        android:textColor="#94A3B8"
+                        android:textColor="#64748B"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -97,7 +97,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📱 App &amp; Support"
-                    android:textColor="#7DD3FC"
+                    android:textColor="#0284C7"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -107,7 +107,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="Machchhar: Raat ka Daaku\nPackage: com.mct.machchhar"
-                    android:textColor="#CBD5E1"
+                    android:textColor="#334155"
                     android:textSize="13sp" />
 
                 <Button
@@ -127,7 +127,7 @@
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_night_card"
                     android:text="✉️ CONTACT DEVELOPER SUPPORT"
-                    android:textColor="#93C5FD"
+                    android:textColor="#0369A1"
                     android:textStyle="bold" />
 
                 <Button
@@ -137,7 +137,7 @@
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_night_card"
                     android:text="📖 OPEN FIELD MANUAL"
-                    android:textColor="#FDE68A"
+                    android:textColor="#B45309"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -152,7 +152,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🔒 Data &amp; Privacy"
-                    android:textColor="#FFD166"
+                    android:textColor="#B45309"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -162,7 +162,7 @@
                     android:layout_marginTop="6dp"
                     android:lineSpacingExtra="3dp"
                     android:text="Your game progress, stars, coins, and badges are stored locally on your device. To reset save data anytime, clear storage in Android App Info or reinstall the app."
-                    android:textColor="#CBD5E1"
+                    android:textColor="#334155"
                     android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>

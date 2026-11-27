@@ -34,14 +34,34 @@ export class UIController {
   constructor(root: HTMLElement, engine: GameEngine) {
     this.root = root;
     this.engine = engine;
+    this.applyTheme();
     this.bindGlobalControls();
     this.renderMenu();
     void adManager.showBanner();
   }
 
+  private applyTheme(): void {
+    const theme = storage.getTheme();
+    document.documentElement.dataset.theme = theme;
+    const themeBtn = document.getElementById('desktop-theme-btn');
+    if (themeBtn) {
+      themeBtn.textContent = theme === 'light' ? '🌙 DARK' : '☀️ LIGHT';
+    }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'light' ? '#f0f7ff' : '#0d1326');
+    }
+  }
+
   private bindGlobalControls(): void {
     document.getElementById('desktop-fullscreen-btn')?.addEventListener('click', () => {
       this.toggleFullscreen();
+    });
+
+    document.getElementById('desktop-theme-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      storage.toggleTheme();
+      this.applyTheme();
     });
 
     window.addEventListener('keydown', (e) => {
@@ -191,9 +211,9 @@ export class UIController {
     }
     if (ammoEl) {
       if (hud.racketMs > 0) {
-        ammoEl.innerHTML = `<span style="color:#38bdf8">⚡ INFINITE ZAP</span>`;
+        ammoEl.innerHTML = `<span style="color:var(--accent-sky)">⚡ INFINITE ZAP</span>`;
       } else if (hud.reloadMs > 0) {
-        ammoEl.innerHTML = `<span style="color:#fb923c">🔄 RELOADING...</span>`;
+        ammoEl.innerHTML = `<span style="color:#ea580c">🔄 RELOADING...</span>`;
       } else {
         const bullets = '🔸'.repeat(hud.ammo) + '▫️'.repeat(Math.max(0, hud.maxAmmo - hud.ammo));
         ammoEl.textContent = hud.ammo < hud.maxAmmo ? `${bullets} ↻` : bullets;
@@ -218,13 +238,13 @@ export class UIController {
     if (tagsEl) {
       const tags: string[] = [];
       if (hud.racketMs > 0) {
-        tags.push(`<span class="powerup-tag" style="color:#38bdf8">⚡ ZAP ${(hud.racketMs / 1000).toFixed(1)}s</span>`);
+        tags.push(`<span class="powerup-tag" style="color:var(--accent-sky)">⚡ ZAP ${(hud.racketMs / 1000).toFixed(1)}s</span>`);
       }
       if (hud.coilMs > 0) {
-        tags.push(`<span class="powerup-tag" style="color:#a78bfa">🌀 COIL ${(hud.coilMs / 1000).toFixed(1)}s</span>`);
+        tags.push(`<span class="powerup-tag" style="color:#7c3aed">🌀 COIL ${(hud.coilMs / 1000).toFixed(1)}s</span>`);
       }
       if (hud.scoreMultiplier > 1) {
-        tags.push(`<span class="powerup-tag" style="color:#ffd166">✨ ${hud.scoreMultiplier}X SCORE</span>`);
+        tags.push(`<span class="powerup-tag" style="color:var(--accent-gold)">✨ ${hud.scoreMultiplier}X SCORE</span>`);
       }
       tagsEl.innerHTML = tags.join('');
     }
@@ -276,7 +296,8 @@ export class UIController {
           <div class="hud-pill">🪙 ${save.coins}</div>
         </div>
         <div class="hud-actions">
-          ${save.winStreak >= 2 ? `<div class="hud-pill" style="color:#fb7185">🔥 ${save.winStreak}</div>` : ''}
+          ${save.winStreak >= 2 ? `<div class="hud-pill" style="color:var(--accent-pink)">🔥 ${save.winStreak}</div>` : ''}
+          <button id="menu-theme-btn" class="icon-btn" title="Switch Light/Dark Theme">${storage.getTheme() === 'light' ? '🌙' : '☀️'}</button>
           <button id="menu-guide-btn" class="icon-btn" title="Game Guide">📖</button>
           <button id="menu-mute-btn" class="icon-btn" title="Toggle Sound (M)">${muteIcon}</button>
         </div>
@@ -288,8 +309,8 @@ export class UIController {
           </div>
           <h1 class="title-main">Machchhar</h1>
           <p class="subtitle">
-            <strong style="color:#ffd166">Raat ka Daaku</strong> — Aim &amp; silence the singing mosquitoes!
-            ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:#fb7185">🌶️ Win Streak: Speed Boosted!</strong>' : ''}
+            <strong style="color:var(--accent-gold)">Raat ka Daaku</strong> — Aim &amp; silence the singing mosquitoes!
+            ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:var(--accent-pink)">🌶️ Win Streak: Speed Boosted!</strong>' : ''}
           </p>
 
           <div class="stats-row">
@@ -300,13 +321,16 @@ export class UIController {
 
           <div class="booster-bar">
             <button id="buy-racket-btn" class="booster-chip ${this.loadout.starterPowerUp === 'racket' ? 'active' : ''}">
-              ⚡ Zap (${this.loadout.starterPowerUp === 'racket' ? 'READY' : `${BOOSTER_COSTS.racket}🪙`})
+              <span>⚡ Zap</span>
+              <small>${this.loadout.starterPowerUp === 'racket' ? 'READY' : `${BOOSTER_COSTS.racket} 🪙`}</small>
             </button>
             <button id="buy-coil-btn" class="booster-chip ${this.loadout.starterPowerUp === 'coil' ? 'active' : ''}">
-              🌀 Coil (${this.loadout.starterPowerUp === 'coil' ? 'READY' : `${BOOSTER_COSTS.coil}🪙`})
+              <span>🌀 Coil</span>
+              <small>${this.loadout.starterPowerUp === 'coil' ? 'READY' : `${BOOSTER_COSTS.coil} 🪙`}</small>
             </button>
             <button id="buy-heart-btn" class="booster-chip ${this.loadout.extraHeart ? 'active' : ''}">
-              💖 +1 ❤️ (${this.loadout.extraHeart ? 'READY' : `${BOOSTER_COSTS.pillow}🪙`})
+              <span>💖 +1 ❤️</span>
+              <small>${this.loadout.extraHeart ? 'READY' : `${BOOSTER_COSTS.pillow} 🪙`}</small>
             </button>
           </div>
 
@@ -354,6 +378,14 @@ export class UIController {
       audioEngine.unlock();
       nativeBridge.haptic('ui');
       audioEngine.toggleMute();
+      this.renderMenu();
+    });
+
+    this.root.querySelector('#menu-theme-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
+      storage.toggleTheme();
+      this.applyTheme();
       this.renderMenu();
     });
 
@@ -489,7 +521,7 @@ export class UIController {
         title: 'Support & Data Deletion',
         link: './support.html',
         body: `
-          <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:#38bdf8">yuvasamrajyaofficial@gmail.com</a></p>
+          <p><strong>Contact:</strong> <a href="mailto:yuvasamrajyaofficial@gmail.com" style="color:var(--link-color)">yuvasamrajyaofficial@gmail.com</a></p>
           <p><strong>Package:</strong> <code>com.mct.machchhar</code></p>
           <p><strong>Clear Data:</strong> Android Settings → Apps → Machchhar: Raat ka Daaku → Storage → Clear Data (or uninstall).</p>
         `,
@@ -564,7 +596,7 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:#fb7185;border-color:rgba(251,113,133,0.4)">SLEEPY HANDS!</div>
+          <div class="game-badge" style="color:var(--accent-pink);border-color:rgba(225,29,72,0.35);background:rgba(225,29,72,0.1)">SLEEPY HANDS!</div>
           <h2>Out of Sleep Stamina</h2>
           <p class="subtitle">
             Next bolt regenerates in <strong>${this.formatStaminaCountdown(stam.msUntilNext)}</strong>.<br>
@@ -682,7 +714,7 @@ export class UIController {
             <button id="hud-mute-btn" class="icon-btn" title="Sound (M)">${muteIcon}</button>
             <button id="hud-pause-btn" class="icon-btn" title="Pause (P)">⏸</button>
           </div>
-          <div id="hud-combo" class="hud-pill hidden" style="color:#ffd166">🔥 x2 COMBO</div>
+          <div id="hud-combo" class="hud-pill hidden" style="color:var(--accent-gold)">🔥 x2 COMBO</div>
         </div>
       </div>
       <div class="hud-center-info">
@@ -827,7 +859,7 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:#fb7185;border-color:rgba(251,113,133,0.4)">
+          <div class="game-badge" style="color:var(--accent-pink);border-color:rgba(225,29,72,0.35);background:rgba(225,29,72,0.1)">
             ${isNearMiss ? `🔥 SO CLOSE! ONLY ${s.remainingToWin} LEFT!` : 'ALARM RINGING!'}
           </div>
           <h2>He Woke Up Grumpy!</h2>

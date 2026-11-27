@@ -8,9 +8,10 @@
       body {
         margin: 0;
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        background: radial-gradient(circle at 50% 0%, #162247 0%, #0a1022 72%);
-        color: #e2e8f0;
+        background: linear-gradient(140deg, #eff6ff 0%, #f8fafc 50%, #fef9ec 100%);
+        color: #0f172a;
         line-height: 1.65;
+        min-height: 100vh;
       }
       .wrap {
         max-width: 980px;
@@ -20,26 +21,29 @@
       .nav {
         margin-bottom: 20px;
         display: flex;
-        gap: 12px;
+        gap: 10px;
         flex-wrap: wrap;
         font-size: 14px;
       }
       .nav a {
-        color: #7dd3fc;
+        color: #0369a1;
         text-decoration: none;
-        padding: 6px 12px;
+        padding: 7px 14px;
         border-radius: 999px;
-        background: rgba(19, 28, 56, 0.85);
-        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
       }
       .nav a.active,
       .nav a:hover {
-        border-color: #ffd166;
-        color: #ffd166;
+        border-color: #f59e0b;
+        color: #b45309;
+        background: #fffbeb;
       }
       .hero {
-        background: #131c38;
-        border: 1px solid rgba(255, 209, 102, 0.35);
+        background: #ffffff;
+        border: 1px solid rgba(245, 158, 11, 0.35);
         border-radius: 20px;
         padding: 26px 24px;
         margin-bottom: 20px;
@@ -48,15 +52,16 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
       }
       .hero h1 {
         margin: 0 0 6px;
-        color: #ffd166;
-        font-size: 1.8rem;
+        color: #0f172a;
+        font-size: 1.75rem;
       }
       .hero p {
         margin: 0;
-        color: #cbd5e1;
+        color: #475569;
       }
       .play-cta {
         display: inline-block;
@@ -66,6 +71,7 @@
         color: #1e1b4b;
         font-weight: 800;
         text-decoration: none;
+        box-shadow: 0 8px 18px rgba(245, 158, 11, 0.28);
       }
       .grid {
         display: grid;
@@ -73,19 +79,21 @@
         gap: 16px;
       }
       .card {
-        background: #131c38;
-        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.1);
         border-radius: 18px;
         padding: 22px 20px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
       }
       h2 {
         margin-top: 0;
-        color: #7dd3fc;
+        color: #0284c7;
         font-size: 1.15rem;
       }
       ul {
         padding-left: 18px;
         margin: 0;
+        color: #334155;
       }
       li {
         margin-bottom: 8px;
@@ -94,9 +102,9 @@
         display: inline-block;
         padding: 2px 7px;
         border-radius: 6px;
-        background: #0f172a;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        color: #ffd166;
+        background: #e2e8f0;
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        color: #92400e;
         font-size: 12px;
         font-weight: 700;
       }

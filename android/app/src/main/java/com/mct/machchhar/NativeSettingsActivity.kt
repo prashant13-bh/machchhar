@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 class NativeSettingsActivity : AppCompatActivity() {
@@ -16,11 +17,10 @@ class NativeSettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_native_settings)
 
-        window.statusBarColor = 0xFF0A1022.toInt()
-        window.navigationBarColor = 0xFF0A1022.toInt()
+        WindowCompat.setDecorFitsSystemWindows(window, true)
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
         }
 
         val prefs = getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
@@ -31,7 +31,7 @@ class NativeSettingsActivity : AppCompatActivity() {
         }
 
         val pkgInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
-        val versionName = pkgInfo?.versionName ?: "1.0.2"
+        val versionName = pkgInfo?.versionName ?: "1.0.3"
         findViewById<TextView>(R.id.tvAppMeta).text =
             "Machchhar: Raat ka Daaku · v$versionName\nPackage: $packageName"
 

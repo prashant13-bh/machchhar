@@ -42,6 +42,7 @@ export interface SaveData {
   winStreak: number;
   lastAccuracy: number;
   achievements: string[];
+  theme: 'light' | 'dark';
 }
 
 const STORAGE_KEY = 'sleep_swatter_save_v2';
@@ -62,6 +63,7 @@ const DEFAULT_SAVE: SaveData = {
   winStreak: 0,
   lastAccuracy: 70,
   achievements: [],
+  theme: 'light',
 };
 
 class StorageService {
@@ -218,6 +220,16 @@ class StorageService {
 
   getTotalStars(): number {
     return Object.values(this.data.starsByLevel).reduce((sum, s) => sum + s, 0);
+  }
+
+  getTheme(): 'light' | 'dark' {
+    return this.data.theme === 'dark' ? 'dark' : 'light';
+  }
+
+  toggleTheme(): 'light' | 'dark' {
+    this.data.theme = this.getTheme() === 'light' ? 'dark' : 'light';
+    this.save();
+    return this.data.theme;
   }
 
   /**

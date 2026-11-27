@@ -3,6 +3,7 @@ package com.mct.machchhar
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 class NativeGuideActivity : AppCompatActivity() {
@@ -11,11 +12,10 @@ class NativeGuideActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_native_guide)
 
-        window.statusBarColor = 0xFF0A1022.toInt()
-        window.navigationBarColor = 0xFF0A1022.toInt()
+        WindowCompat.setDecorFitsSystemWindows(window, true)
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
         }
 
         findViewById<Button>(R.id.btnBackGuide).setOnClickListener { finish() }
