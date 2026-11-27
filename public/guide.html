@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Guide &amp; Controls — Machchhar: Raat ka Daaku</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 50% 0%, #162247 0%, #0a1022 72%);
+        color: #e2e8f0;
+        line-height: 1.65;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px 60px;
+      }
+      .nav {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+      .nav a {
+        color: #7dd3fc;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(19, 28, 56, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+      }
+      .nav a.active,
+      .nav a:hover {
+        border-color: #ffd166;
+        color: #ffd166;
+      }
+      .hero {
+        background: #131c38;
+        border: 1px solid rgba(255, 209, 102, 0.35);
+        border-radius: 20px;
+        padding: 26px 24px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .hero h1 {
+        margin: 0 0 6px;
+        color: #ffd166;
+        font-size: 1.8rem;
+      }
+      .hero p {
+        margin: 0;
+        color: #cbd5e1;
+      }
+      .play-cta {
+        display: inline-block;
+        padding: 12px 22px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #ffd166, #f59e0b);
+        color: #1e1b4b;
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: #131c38;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        padding: 22px 20px;
+      }
+      h2 {
+        margin-top: 0;
+        color: #7dd3fc;
+        font-size: 1.15rem;
+      }
+      ul {
+        padding-left: 18px;
+        margin: 0;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      kbd {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        color: #ffd166;
+        font-size: 12px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="nav">
+        <a href="./index.html">← Play Game</a>
+        <a href="./guide.html" class="active">Game Guide</a>
+        <a href="./privacy.html">Privacy Policy</a>
+        <a href="./terms.html">Terms of Service</a>
+        <a href="./support.html">Support &amp; Data Deletion</a>
+      </div>
+
+      <div class="hero">
+        <div>
+          <h1>Machchhar: Raat ka Daaku — Field Manual</h1>
+          <p>Master laser-guided shots, silence DJ mosquitoes, and protect Uncle's sleep!</p>
+        </div>
+        <a class="play-cta" href="./index.html">▶ PLAY NOW</a>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>🎮 Controls (Desktop &amp; Mobile)</h2>
+          <ul>
+            <li><strong>Desktop Mouse:</strong> Hover anywhere to lock the dotted laser sight; <strong>Left Click</strong> shoots instantly!</li>
+            <li><strong>Desktop Keyboard:</strong> <kbd>A</kbd>/<kbd>D</kbd> or <kbd>←</kbd>/<kbd>→</kbd> to aim, <kbd>Space</kbd> to blast, <kbd>R</kbd> to tactical reload, <kbd>P</kbd>/<kbd>Esc</kbd> pause, <kbd>M</kbd> mute, <kbd>F</kbd> fullscreen.</li>
+            <li><strong>Android / Touch:</strong> Drag anywhere to aim the laser sight cleanly, then release to fire! Tap the ammo pill anytime to reload early.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>🦟 Mosquito Field Guide</h2>
+          <ul>
+            <li><strong>🦟 Buzzer (100 pts):</strong> 1 HP standard intruder.</li>
+            <li><strong>🎧 DJ Singer (300 pts):</strong> Plays catchy bedroom beats—blast mid-song for an instant <strong>MIC DROP!</strong></li>
+            <li><strong>🥷 Shadow Ninja (150 pts):</strong> Fast flyer that can juke your laser sight!</li>
+            <li><strong>🛡️ Armored Tank (250 pts):</strong> 2 HP helmeted tank; first hit stuns with a <em>BONK!</em></li>
+            <li><strong>👑 King Mosquito (1,000 pts):</strong> 6 HP Boss on Boss Nights!</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>⚡ Power-Ups &amp; Streaks</h2>
+          <ul>
+            <li><strong>⚡ Zap Ammo:</strong> Unlimited rapid fire + chain blast (ignores reload &amp; deals 2 damage).</li>
+            <li><strong>🌀 Sleep Coil:</strong> Slows every mosquito in the room by 52% for easy snipes.</li>
+            <li><strong>💖 Deep Sleep:</strong> Restores +1 Sleep Heart when Uncle gets bitten.</li>
+            <li><strong>🔥 Fever Streaks:</strong> Every 5 combo kills awards <strong>+5 Sleep Coins</strong> automatically!</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>🏆 Achievements &amp; Sleep Stamina</h2>
+          <ul>
+            <li><strong>6 Unlockable Badges:</strong> First Swat, Fever Hands (8x combo), Mic Dropper, Sniper Uncle (85%+ accuracy), King Slayer, and Night Watchman (25+ in Endless). Each badge awards <strong>+10 🪙</strong>!</li>
+            <li><strong>Fair Stamina:</strong> Winning Campaign Nights costs <strong>0 stamina</strong>. Only failed attempts cost 1 bolt (auto-regenerates every 10 minutes), and <strong>Endless Night</strong> is always free.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

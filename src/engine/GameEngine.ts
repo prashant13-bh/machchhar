@@ -6,7 +6,8 @@ import {
   type PowerUpKind,
 } from '../config/levels';
 import { audioEngine } from '../services/AudioEngine';
-import { storage, type DdaModifiers } from '../services/Storage';
+import { nativeBridge } from '../services/NativeBridge';
+import { storage, type AchievementDef, type DdaModifiers } from '../services/Storage';
 import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
@@ -48,6 +49,7 @@ export interface RunSummary {
 export interface EngineCallbacks {
   onPhaseChange: (phase: GamePhase, summary?: RunSummary) => void;
   onHudUpdate: (hud: HudSnapshot) => void;
+  onAchievementUnlock?: (badge: AchievementDef) => void;
 }
 
 const CLIP_SIZE = 6;
@@ -73,6 +75,8 @@ export class GameEngine {
   private viewOffsetX = 0;
   private viewOffsetY = 0;
   private pointerDownActive = false;
+  private keysHeld = { left: false, right: false };
+  private dangerLevel = 0;
 
   // Run state
   private nextId = 1;
@@ -132,7 +136,8 @@ export class GameEngine {
 
   constructor(canvas: HTMLCanvasElement, callbacks: EngineCallbacks) {
     this.canvas = canvas;
-    const context = canvas.getContext('2d');
+    const context =
+      canvas.getContext('2d', { alpha: false, desynchronized: true }) ?? canvas.getContext('2d');
     if (!context) {
       throw new Error('2D Canvas context unavailable');
     }
@@ -257,6 +262,8 @@ export class GameEngine {
     this.scoreMultiplier = options?.scoreMultiplier ?? 1;
     this.revivedUsed = false;
     this.pointerDownActive = false;
+    this.keysHeld = { left: false, right: false };
+    this.dangerLevel = 0;
 
     this.ammo = CLIP_SIZE;
     this.reloadMs = 0;
@@ -309,6 +316,47 @@ export class GameEngine {
         this.sleeper.isAiming = false;
       }
     });
+
+    window.addEventListener('keydown', (e) => {
+      if (this.phase !== 'playing') return;
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        this.keysHeld.left = true;
+      } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        this.keysHeld.right = true;
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        if (e.repeat) return;
+        audioEngine.unlock();
+        this.sleeper.isAiming = true;
+        this.refreshAimLock();
+        this.fireShot(this.sleeper.aimX, this.sleeper.aimY, this.sleeper.rayEndX, this.sleeper.rayEndY);
+      } else if (e.code === 'KeyR') {
+        e.preventDefault();
+        this.manualReload();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.keysHeld.left = false;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') this.keysHeld.right = false;
+    });
+
+    window.addEventListener('blur', () => {
+      this.keysHeld.left = false;
+      this.keysHeld.right = false;
+    });
+  }
+
+  manualReload(): void {
+    if (this.phase !== 'playing' || this.racketMs > 0 || this.reloadMs > 0 || this.ammo >= CLIP_SIZE) {
+      return;
+    }
+    this.ammo = 0;
+    this.reloadMs = RELOAD_DURATION_MS;
+    audioEngine.playReloadClick(false);
+    nativeBridge.haptic('ui');
+    this.addFloatingText(this.sleeper.gunPivotX, this.sleeper.gunPivotY - 26, '🔄 RELOADING...', '#38bdf8', 0.95);
+    this.emitHud();
   }
 
   resize(): void {
@@ -423,8 +471,17 @@ export class GameEngine {
     const coords = this.toWorldCoords(event);
     if (!coords) return;
 
-    this.pointerDownActive = true;
     this.updateAimTarget(coords.wx, coords.wy);
+
+    // Zero-latency shot on desktop mouse press; touch stays drag-aim + release-fire
+    if (event.pointerType === 'mouse') {
+      if (event.button === 0) {
+        this.fireShot(this.sleeper.aimX, this.sleeper.aimY, this.sleeper.rayEndX, this.sleeper.rayEndY);
+      }
+      return;
+    }
+
+    this.pointerDownActive = true;
   }
 
   private handlePointerMove(event: PointerEvent): void {
@@ -437,6 +494,7 @@ export class GameEngine {
   }
 
   private handlePointerUp(event: PointerEvent): void {
+    if (event.pointerType === 'mouse') return;
     if (!this.pointerDownActive) return;
     this.pointerDownActive = false;
     if (this.phase !== 'playing') return;
@@ -446,10 +504,7 @@ export class GameEngine {
       this.updateAimTarget(coords.wx, coords.wy);
     }
     this.fireShot(this.sleeper.aimX, this.sleeper.aimY, this.sleeper.rayEndX, this.sleeper.rayEndY);
-
-    if (event.pointerType !== 'mouse') {
-      this.sleeper.isAiming = false;
-    }
+    this.sleeper.isAiming = false;
   }
 
   private fireShot(cursorX: number, cursorY: number, rayEndX: number, rayEndY: number): void {
@@ -479,6 +534,7 @@ export class GameEngine {
 
     this.sleeper.recoilTimerMs = 130;
     this.sleeper.muzzleFlashMs = 100;
+    nativeBridge.haptic('shot');
 
     this.casings.push({
       x: this.sleeper.gunPivotX + Math.cos(this.sleeper.gunAngle) * 18,
@@ -702,6 +758,21 @@ export class GameEngine {
       this.addFloatingText(WORLD_WIDTH / 2, 140, `🔥 ${this.combo} STREAK! +5 🪙`, '#4ade80', 1.22);
     }
 
+    nativeBridge.haptic('hit');
+    this.unlockBadge('first_swat');
+    if (this.combo >= 8) this.unlockBadge('combo_8');
+    if (m.kind === 'singer') {
+      storage.recordSpecialKill('singer');
+      if (storage.getData().singersSilenced >= 5) this.unlockBadge('singer_5');
+    }
+    if (m.kind === 'boss') {
+      storage.recordSpecialKill('boss');
+      this.unlockBadge('king_slayer');
+    }
+    if (this.mode === 'endless' && this.kills >= 25) {
+      this.unlockBadge('endless_25');
+    }
+
     const dropChance = Math.max(0.08, this.level.powerUpChance + this.dda.powerUpBonus);
     if (Math.random() < dropChance && this.powerUps.length < 2) {
       this.spawnPowerUp(m.x, Math.min(m.y, 410));
@@ -743,6 +814,7 @@ export class GameEngine {
     this.screenFlashMs = 260;
     this.screenFlashColor = '#ff4d6d';
     this.combo = 0;
+    nativeBridge.haptic('hurt');
 
     if (this.sleeper.hearts <= 0) {
       this.triggerGameOver();
@@ -774,8 +846,12 @@ export class GameEngine {
     this.mosquitoes = [];
     this.powerUps = [];
     audioEngine.playLevelClear();
+    nativeBridge.haptic('clear');
 
     const accuracy = this.totalShots > 0 ? Math.round((this.hitShots / this.totalShots) * 100) : 100;
+    if (accuracy >= 85) {
+      this.unlockBadge('sharpshooter');
+    }
     const heartRatio = this.sleeper.hearts / this.sleeper.maxHearts;
     const stars = heartRatio >= 0.75 ? 3 : heartRatio >= 0.45 ? 2 : 1;
     const coinsEarned = Math.max(8, Math.round(this.kills * 1.5) + stars * 10);
@@ -841,8 +917,21 @@ export class GameEngine {
     this.updateSleeperAndAmbience(dtMs, dtSec, now);
 
     if (this.phase === 'playing') {
+      if (this.keysHeld.left || this.keysHeld.right) {
+        const dir = (this.keysHeld.right ? 1 : 0) - (this.keysHeld.left ? 1 : 0);
+        const nextAngle = Math.max(
+          -Math.PI * 0.92,
+          Math.min(-Math.PI * 0.08, this.sleeper.gunAngle + dir * 2.2 * dtSec)
+        );
+        this.sleeper.gunAngle = nextAngle;
+        this.sleeper.aimX = this.sleeper.gunPivotX + Math.cos(nextAngle) * 260;
+        this.sleeper.aimY = this.sleeper.gunPivotY + Math.sin(nextAngle) * 260;
+        this.sleeper.isAiming = true;
+      }
       this.updateGameplay(dtMs, dtSec);
       this.refreshAimLock();
+    } else {
+      this.dangerLevel = 0;
     }
 
     const transform = this.renderer.render(this.ctx, this.canvas.width, this.canvas.height, {
@@ -858,6 +947,7 @@ export class GameEngine {
       zzzs: this.zzzs,
       racketActive: this.racketMs > 0,
       coilActive: this.coilMs > 0,
+      dangerLevel: this.dangerLevel,
       screenFlashMs: this.screenFlashMs,
       screenFlashColor: this.screenFlashColor,
     });
@@ -989,6 +1079,7 @@ export class GameEngine {
     const speedSlowFactor = this.coilMs > 0 ? 0.48 : 1;
     const effectiveDodge = Math.max(0, this.level.dodgeChance + this.dda.dodgeBonus);
     let closestProximity = 0;
+    let divingDanger = 0;
     let hasFastOrBoss = false;
 
     for (let i = this.mosquitoes.length - 1; i >= 0; i--) {
@@ -1082,7 +1173,11 @@ export class GameEngine {
       const distToSleeper = Math.hypot(m.x - this.sleeper.targetX, m.y - this.sleeper.targetY);
       const prox = Math.max(0, 1 - distToSleeper / 480);
       closestProximity = Math.max(closestProximity, prox);
+      if (m.state === 'diving') {
+        divingDanger = Math.max(divingDanger, Math.max(0, 1 - distToSleeper / 260));
+      }
     }
+    this.dangerLevel = divingDanger;
 
     audioEngine.updateBuzz(this.mosquitoes.length, closestProximity, hasFastOrBoss);
     const activeSongs = this.mosquitoes
@@ -1196,6 +1291,9 @@ export class GameEngine {
 
   private spawnSplatParticles(x: number, y: number, color: string, count: number): void {
     for (let i = 0; i < count; i++) {
+      if (this.particles.length >= 60) {
+        this.particles.shift();
+      }
       const a = Math.random() * Math.PI * 2;
       const spd = 60 + Math.random() * 170;
       this.particles.push({
@@ -1208,6 +1306,20 @@ export class GameEngine {
         lifeMs: 420 + Math.random() * 200,
         maxLifeMs: 620,
       });
+    }
+  }
+
+  private unlockBadge(id: string): void {
+    const unlocked = storage.unlockAchievement(id);
+    if (unlocked) {
+      this.addFloatingText(
+        WORLD_WIDTH / 2,
+        105,
+        `🏆 ${unlocked.title}! +10 🪙`,
+        '#ffd166',
+        1.15
+      );
+      this.callbacks.onAchievementUnlock?.(unlocked);
     }
   }
 

@@ -8,21 +8,134 @@ import type { HudSnapshot } from '../engine/Entities';
 import type { GameEngine, GamePhase, RunSummary, StartRunOptions } from '../engine/GameEngine';
 import { adManager } from '../services/AdManager';
 import { audioEngine } from '../services/AudioEngine';
-import { STAMINA_REFILL_COST, storage } from '../services/Storage';
+import { nativeBridge } from '../services/NativeBridge';
+import { ACHIEVEMENTS, STAMINA_REFILL_COST, storage, type AchievementDef } from '../services/Storage';
+
+type ScreenName =
+  | 'menu'
+  | 'levels'
+  | 'badges'
+  | 'legal'
+  | 'no_stamina'
+  | 'hud'
+  | 'paused'
+  | 'level_clear'
+  | 'game_over';
 
 export class UIController {
   private root: HTMLElement;
   private engine: GameEngine;
-  private currentScreen: 'menu' | 'levels' | 'hud' | 'paused' | 'level_clear' | 'game_over' = 'menu';
+  private currentScreen: ScreenName = 'menu';
   private lastSummary?: RunSummary;
   private loadout: StartRunOptions = {};
   private staminaTimerId: number | null = null;
+  private toastTimerId: number | null = null;
 
   constructor(root: HTMLElement, engine: GameEngine) {
     this.root = root;
     this.engine = engine;
+    this.bindGlobalControls();
     this.renderMenu();
     void adManager.showBanner();
+  }
+
+  private bindGlobalControls(): void {
+    document.getElementById('desktop-fullscreen-btn')?.addEventListener('click', () => {
+      this.toggleFullscreen();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (this.currentScreen === 'hud') {
+          e.preventDefault();
+          this.engine.pause();
+        } else if (this.currentScreen === 'paused') {
+          e.preventDefault();
+          this.engine.resume();
+        } else if (
+          this.currentScreen === 'levels' ||
+          this.currentScreen === 'badges' ||
+          this.currentScreen === 'legal' ||
+          this.currentScreen === 'no_stamina'
+        ) {
+          e.preventDefault();
+          this.renderMenu();
+        }
+      } else if (e.code === 'KeyM' && !e.repeat) {
+        audioEngine.unlock();
+        audioEngine.toggleMute();
+        if (this.currentScreen === 'hud') {
+          const btn = this.root.querySelector('#hud-mute-btn');
+          if (btn) btn.textContent = audioEngine.isMuted() ? '🔇' : '🔊';
+        } else if (this.currentScreen === 'menu') {
+          this.renderMenu();
+        } else if (this.currentScreen === 'paused') {
+          this.renderPauseModal();
+        }
+      } else if (e.code === 'KeyF' && !e.repeat && !nativeBridge.isNative) {
+        this.toggleFullscreen();
+      }
+    });
+
+    // Android Kotlin MainActivity dispatches `machchhar:back` on hardware/gesture Back press
+    window.addEventListener('machchhar:back', () => {
+      if (this.currentScreen === 'hud') {
+        this.engine.pause();
+      } else if (this.currentScreen === 'paused') {
+        this.engine.resume();
+      } else if (this.currentScreen !== 'menu') {
+        this.engine.returnToMenu();
+      } else {
+        nativeBridge.exitApp();
+      }
+    });
+  }
+
+  private toggleFullscreen(): void {
+    const target = document.getElementById('stage-frame') ?? document.documentElement;
+    if (!document.fullscreenElement) {
+      void target.requestFullscreen?.().catch(() => {});
+    } else {
+      void document.exitFullscreen?.().catch(() => {});
+    }
+  }
+
+  showAchievementToast(badge: AchievementDef): void {
+    const toast = document.getElementById('achievement-toast');
+    if (!toast) return;
+    if (this.toastTimerId !== null) {
+      clearTimeout(this.toastTimerId);
+    }
+    toast.textContent = `🏆 Unlocked: ${badge.icon} ${badge.title} (+10 🪙)`;
+    toast.classList.remove('hidden');
+    this.updateDesktopCareerPanel();
+    this.toastTimerId = window.setTimeout(() => {
+      toast.classList.add('hidden');
+      this.toastTimerId = null;
+    }, 2800);
+  }
+
+  private updateDesktopCareerPanel(): void {
+    const panel = document.getElementById('desktop-career-card');
+    if (!panel) return;
+    const save = storage.getData();
+    const totalStars = storage.getTotalStars();
+    const maxStars = TOTAL_CAMPAIGN_LEVELS * 3;
+    const badgesHtml = ACHIEVEMENTS.map((a) => {
+      const unlocked = save.achievements.includes(a.id);
+      return `<span class="badge-chip-mini ${unlocked ? '' : 'locked'}" title="${a.desc}">${a.icon} ${a.title}</span>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <h3 class="panel-heading">🏆 Career &amp; Badges</h3>
+      <div class="career-mini-grid">
+        <div class="career-mini-box"><strong>${save.highScore.toLocaleString()}</strong><span>Best Score</span></div>
+        <div class="career-mini-box"><strong>${save.bestEndlessScore.toLocaleString()}</strong><span>Endless Best</span></div>
+        <div class="career-mini-box"><strong>⭐ ${totalStars}/${maxStars}</strong><span>Campaign Stars</span></div>
+        <div class="career-mini-box"><strong>🪙 ${save.coins}</strong><span>Sleep Coins</span></div>
+      </div>
+      <div class="badge-chips-row">${badgesHtml}</div>
+    `;
   }
 
   handlePhaseChange(phase: GamePhase, summary?: RunSummary): void {
@@ -49,6 +162,7 @@ export class UIController {
       void adManager.showBanner();
       this.renderMenu();
     }
+    this.updateDesktopCareerPanel();
   }
 
   updateHud(hud: HudSnapshot): void {
@@ -81,7 +195,8 @@ export class UIController {
       } else if (hud.reloadMs > 0) {
         ammoEl.innerHTML = `<span style="color:#fb923c">🔄 RELOADING...</span>`;
       } else {
-        ammoEl.textContent = '🔸'.repeat(hud.ammo) + '▫️'.repeat(Math.max(0, hud.maxAmmo - hud.ammo));
+        const bullets = '🔸'.repeat(hud.ammo) + '▫️'.repeat(Math.max(0, hud.maxAmmo - hud.ammo));
+        ammoEl.textContent = hud.ammo < hud.maxAmmo ? `${bullets} ↻` : bullets;
       }
     }
     if (comboEl) {
@@ -142,6 +257,8 @@ export class UIController {
 
   private renderMenu(): void {
     this.stopStaminaTicker();
+    this.currentScreen = 'menu';
+    this.updateDesktopCareerPanel();
     const save = storage.getData();
     const stam = storage.getStaminaInfo();
     const nextLevel = Math.min(save.highestUnlockedLevel, TOTAL_CAMPAIGN_LEVELS);
@@ -160,7 +277,8 @@ export class UIController {
         </div>
         <div class="hud-actions">
           ${save.winStreak >= 2 ? `<div class="hud-pill" style="color:#fb7185">🔥 ${save.winStreak}</div>` : ''}
-          <button id="menu-mute-btn" class="icon-btn" title="Toggle Sound">${muteIcon}</button>
+          <button id="menu-guide-btn" class="icon-btn" title="Game Guide">📖</button>
+          <button id="menu-mute-btn" class="icon-btn" title="Toggle Sound (M)">${muteIcon}</button>
         </div>
       </div>
       <div class="screen-backdrop">
@@ -177,7 +295,7 @@ export class UIController {
           <div class="stats-row">
             <div class="stat-box"><strong>${save.highScore.toLocaleString()}</strong><span>Best Score</span></div>
             <div class="stat-box"><strong>${save.totalSwatted}</strong><span>Blasted</span></div>
-            <div class="stat-box"><strong>Night ${save.highestUnlockedLevel}</strong><span>Unlocked</span></div>
+            <div class="stat-box"><strong>${save.achievements.length}/${ACHIEVEMENTS.length} 🏆</strong><span>Badges</span></div>
           </div>
 
           <div class="booster-bar">
@@ -207,11 +325,13 @@ export class UIController {
             </button>
           </div>
           <div class="legal-footer">
-            <button id="legal-privacy-btn" class="link-btn">Privacy Policy</button>
+            <button id="menu-badges-btn" class="link-btn">🏆 Badges</button>
+            <span>·</span>
+            <button id="legal-privacy-btn" class="link-btn">Privacy</button>
             <span>·</span>
             <button id="legal-terms-btn" class="link-btn">Terms</button>
             <span>·</span>
-            <button id="legal-support-btn" class="link-btn">Support</button>
+            <button id="legal-support-btn" class="link-btn">${nativeBridge.hasAndroidBridge() ? '⚙️ Settings' : 'Support'}</button>
           </div>
         </div>
       </div>
@@ -232,8 +352,23 @@ export class UIController {
 
     this.root.querySelector('#menu-mute-btn')?.addEventListener('click', () => {
       audioEngine.unlock();
+      nativeBridge.haptic('ui');
       audioEngine.toggleMute();
       this.renderMenu();
+    });
+
+    this.root.querySelector('#menu-guide-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
+      if (!nativeBridge.openNativeGuide()) {
+        window.open('./guide.html', '_blank', 'noopener,noreferrer');
+      }
+    });
+
+    this.root.querySelector('#menu-badges-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
+      this.renderBadgesModal();
     });
 
     this.bindBoosterPurchase('#buy-racket-btn', 'racket');
@@ -243,20 +378,22 @@ export class UIController {
     this.root.querySelector('#play-btn')?.addEventListener('click', () => {
       audioEngine.unlock();
       audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
       this.tryLaunchCampaign(nextLevel);
     });
 
     this.root.querySelector('#levels-btn')?.addEventListener('click', () => {
       audioEngine.unlock();
       audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
       this.stopStaminaTicker();
-      this.currentScreen = 'levels';
       this.renderLevelSelect();
     });
 
     this.root.querySelector('#endless-btn')?.addEventListener('click', () => {
       audioEngine.unlock();
       audioEngine.playUiClick();
+      nativeBridge.haptic('ui');
       const opts = { ...this.loadout };
       this.loadout = {};
       this.engine.startEndlessMode(opts);
@@ -285,12 +422,51 @@ export class UIController {
     });
     this.root.querySelector('#legal-support-btn')?.addEventListener('click', () => {
       audioEngine.playUiClick();
-      this.renderLegalModal('support');
+      if (!nativeBridge.openNativeSettings()) {
+        this.renderLegalModal('support');
+      }
+    });
+  }
+
+  private renderBadgesModal(): void {
+    this.stopStaminaTicker();
+    this.currentScreen = 'badges';
+    const save = storage.getData();
+
+    const cards = ACHIEVEMENTS.map((a) => {
+      const unlocked = save.achievements.includes(a.id);
+      return `
+        <div class="badge-tile ${unlocked ? '' : 'locked'}">
+          <div class="badge-tile-icon">${unlocked ? a.icon : '🔒'}</div>
+          <div>
+            <strong>${a.title}</strong>
+            <small>${a.desc}</small>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    this.root.innerHTML = `
+      <div class="screen-backdrop">
+        <div class="card">
+          <div class="game-badge">CAREER TROPHIES</div>
+          <h2>Night Watch Badges</h2>
+          <p class="subtitle">${save.achievements.length}/${ACHIEVEMENTS.length} unlocked · +10 🪙 per badge!</p>
+          <div class="badge-grid">${cards}</div>
+          <button id="badges-back-btn" class="btn-primary">← BACK TO MENU</button>
+        </div>
+      </div>
+    `;
+
+    this.root.querySelector('#badges-back-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      this.renderMenu();
     });
   }
 
   private renderLegalModal(tab: 'privacy' | 'terms' | 'support'): void {
     this.stopStaminaTicker();
+    this.currentScreen = 'legal';
     const contentMap: Record<'privacy' | 'terms' | 'support', { title: string; body: string; link: string }> = {
       privacy: {
         title: 'Privacy Policy',
@@ -368,7 +544,6 @@ export class UIController {
         else this.loadout.starterPowerUp = kind;
         this.renderMenu();
       } else {
-        // Offer free coins / booster via Rewarded Ad when low on coins!
         const rewarded = await adManager.showRewardedAd('Free Booster + 25 Coins');
         if (rewarded) {
           storage.addCoins(25);
@@ -382,6 +557,7 @@ export class UIController {
   }
 
   private renderNoStaminaModal(targetLevelId: number): void {
+    this.currentScreen = 'no_stamina';
     const save = storage.getData();
     const stam = storage.getStaminaInfo();
 
@@ -439,6 +615,7 @@ export class UIController {
   }
 
   private renderLevelSelect(): void {
+    this.currentScreen = 'levels';
     const save = storage.getData();
     const maxDisplay = Math.max(TOTAL_CAMPAIGN_LEVELS, save.highestUnlockedLevel);
 
@@ -486,7 +663,6 @@ export class UIController {
 
     this.root.querySelector('#back-menu-btn')?.addEventListener('click', () => {
       audioEngine.playUiClick();
-      this.currentScreen = 'menu';
       this.renderMenu();
     });
   }
@@ -498,13 +674,13 @@ export class UIController {
         <div class="hud-group">
           <div id="hud-hearts" class="hud-pill">❤️❤️❤️❤️</div>
           <div id="hud-goal" class="hud-pill">Night 1 · 0/8</div>
-          <div id="hud-ammo" class="hud-pill">🔸🔸🔸🔸🔸🔸</div>
+          <button id="hud-ammo" class="hud-pill hud-ammo-btn" type="button" title="Tap or press R to reload">🔸🔸🔸🔸🔸🔸</button>
         </div>
         <div class="hud-group" style="align-items:flex-end">
           <div class="hud-actions">
             <div id="hud-score" class="hud-pill">⭐ 0</div>
-            <button id="hud-mute-btn" class="icon-btn" title="Sound">${muteIcon}</button>
-            <button id="hud-pause-btn" class="icon-btn" title="Pause">⏸</button>
+            <button id="hud-mute-btn" class="icon-btn" title="Sound (M)">${muteIcon}</button>
+            <button id="hud-pause-btn" class="icon-btn" title="Pause (P)">⏸</button>
           </div>
           <div id="hud-combo" class="hud-pill hidden" style="color:#ffd166">🔥 x2 COMBO</div>
         </div>
@@ -516,6 +692,11 @@ export class UIController {
         <div id="hud-tags" class="powerup-tags"></div>
       </div>
     `;
+
+    this.root.querySelector('#hud-ammo')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.engine.manualReload();
+    });
 
     this.root.querySelector('#hud-mute-btn')?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -543,6 +724,11 @@ export class UIController {
           <div class="btn-stack">
             <button id="resume-btn" class="btn-primary">▶ RESUME</button>
             <button id="pause-mute-btn" class="btn-secondary">${muteText}</button>
+            ${
+              nativeBridge.hasAndroidBridge()
+                ? `<button id="pause-settings-btn" class="btn-secondary">⚙️ ANDROID SETTINGS</button>`
+                : ''
+            }
             <button id="pause-menu-btn" class="btn-danger">🏠 MAIN MENU</button>
           </div>
         </div>
@@ -556,6 +742,10 @@ export class UIController {
     this.root.querySelector('#pause-mute-btn')?.addEventListener('click', () => {
       audioEngine.toggleMute();
       this.renderPauseModal();
+    });
+    this.root.querySelector('#pause-settings-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.openNativeSettings();
     });
     this.root.querySelector('#pause-menu-btn')?.addEventListener('click', () => {
       audioEngine.playUiClick();
@@ -584,8 +774,9 @@ export class UIController {
             <button id="double-coins-btn" class="btn-reward">🪙 DOUBLE COINS (+${s.coinsEarned}) — WATCH AD</button>
             <div class="btn-row">
               <button id="replay-level-btn" class="btn-secondary">🔁 REPLAY</button>
-              <button id="clear-menu-btn" class="btn-secondary">🏠 MENU</button>
+              <button id="clear-share-btn" class="btn-secondary">📤 SHARE</button>
             </div>
+            <button id="clear-menu-btn" class="btn-secondary">🏠 MAIN MENU</button>
           </div>
         </div>
       </div>
@@ -602,6 +793,11 @@ export class UIController {
       this.tryLaunchCampaign(s.levelId);
     });
 
+    this.root.querySelector('#clear-share-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.shareScore(s.score, s.kills);
+    });
+
     this.root.querySelector('#double-coins-btn')?.addEventListener('click', async () => {
       audioEngine.playUiClick();
       const btn = this.root.querySelector('#double-coins-btn') as HTMLButtonElement | null;
@@ -609,6 +805,7 @@ export class UIController {
       if (rewarded) {
         storage.addCoins(s.coinsEarned);
         audioEngine.playPowerUp('pillow');
+        this.updateDesktopCareerPanel();
         if (btn) {
           btn.disabled = true;
           btn.textContent = `✅ +${s.coinsEarned} BONUS COINS ADDED!`;
@@ -653,7 +850,10 @@ export class UIController {
                 : ''
             }
             <button id="retry-btn" class="btn-primary">🔄 TRY AGAIN</button>
-            <button id="gameover-menu-btn" class="btn-secondary">🏠 MAIN MENU</button>
+            <div class="btn-row">
+              <button id="gameover-share-btn" class="btn-secondary">📤 SHARE</button>
+              <button id="gameover-menu-btn" class="btn-secondary">🏠 MENU</button>
+            </div>
           </div>
         </div>
       </div>
@@ -675,6 +875,11 @@ export class UIController {
       } else {
         this.tryLaunchCampaign(s.levelId);
       }
+    });
+
+    this.root.querySelector('#gameover-share-btn')?.addEventListener('click', () => {
+      audioEngine.playUiClick();
+      nativeBridge.shareScore(s.score, s.kills);
     });
 
     this.root.querySelector('#gameover-menu-btn')?.addEventListener('click', async () => {

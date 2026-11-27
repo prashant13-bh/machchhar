@@ -38,15 +38,61 @@ body {
   height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: radial-gradient(circle at 50% 25%, #162247 0%, #090e1f 75%);
+}
+
+#desktop-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+#stage-frame {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.desktop-panel {
+  display: none;
 }
 
 #game-canvas {
   display: block;
   width: 100%;
+  height: 100%;
   flex: 1;
   min-height: 0;
   cursor: crosshair;
   touch-action: none;
+}
+
+.achievement-toast {
+  position: absolute;
+  top: calc(64px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: linear-gradient(135deg, rgba(19, 28, 56, 0.96), rgba(30, 41, 82, 0.96));
+  border: 1.5px solid var(--accent-gold);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: popIn 0.2s ease-out;
 }
 
 #ui-overlay {
@@ -596,5 +642,283 @@ button {
 
   .level-grid {
     max-height: 44dvh;
+  }
+}
+
+.hud-ammo-btn {
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.hud-ammo-btn:hover {
+  border-color: var(--accent-sky);
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 290px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.badge-tile {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 209, 102, 0.45);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.badge-tile.locked {
+  opacity: 0.45;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.badge-tile-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.badge-tile strong {
+  display: block;
+  font-size: 12px;
+  color: var(--accent-gold);
+}
+
+.badge-tile small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* Desktop 3-column Arcade Studio Layout */
+@media (min-width: 980px) {
+  body:not(.is-native) #desktop-shell {
+    gap: 20px;
+    padding: 16px 24px;
+    align-items: center;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+
+  body:not(.is-native) #stage-frame {
+    flex: 0 0 auto;
+    height: 100%;
+    max-height: 820px;
+    width: auto;
+    aspect-ratio: 480 / 800;
+    border-radius: 26px;
+    border: 2px solid rgba(125, 211, 252, 0.25);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 36px rgba(56, 189, 248, 0.12);
+  }
+
+  body:not(.is-native) .desktop-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 280px;
+    max-height: 820px;
+    overflow-y: auto;
+  }
+
+  .panel-card {
+    background: rgba(15, 23, 46, 0.86);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
+    padding: 14px 15px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+  }
+
+  .panel-kicker {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent-gold);
+    background: rgba(255, 209, 102, 0.14);
+    border: 1px solid rgba(255, 209, 102, 0.3);
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+
+  .panel-title {
+    font-size: 19px;
+    font-weight: 900;
+    margin: 0 0 6px;
+    color: #fff;
+  }
+
+  .panel-desc {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .panel-heading {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #bae6fd;
+    letter-spacing: 0.02em;
+  }
+
+  .key-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .key-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: var(--accent-gold);
+  }
+
+  .intel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .intel-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+  }
+
+  .intel-item > span {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: rgba(30, 41, 59, 0.9);
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .intel-item strong {
+    display: block;
+    font-size: 12px;
+    color: #f8fafc;
+  }
+
+  .intel-item small {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  .desktop-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-compact {
+    padding: 9px 12px;
+    font-size: 12px;
+    border-radius: 11px;
+  }
+
+  .desktop-nav-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .desktop-nav-links a {
+    display: block;
+    padding: 7px 8px;
+    border-radius: 9px;
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #93c5fd;
+    text-decoration: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .desktop-nav-links a:hover {
+    border-color: var(--accent-sky);
+    color: #fff;
+  }
+
+  .career-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+
+  .career-mini-box {
+    background: rgba(30, 41, 59, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 11px;
+    padding: 7px 8px;
+    text-align: center;
+  }
+
+  .career-mini-box strong {
+    display: block;
+    font-size: 14px;
+    color: var(--accent-gold);
+  }
+
+  .career-mini-box span {
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+
+  .badge-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .badge-chip-mini {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 209, 102, 0.14);
+    border: 1px solid rgba(255, 209, 102, 0.32);
+    color: #fde68a;
+  }
+
+  .badge-chip-mini.locked {
+    opacity: 0.4;
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
   }
 }

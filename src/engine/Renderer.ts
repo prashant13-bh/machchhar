@@ -26,6 +26,7 @@ export interface RenderContextState {
   zzzs: ZzzBubble[];
   racketActive: boolean;
   coilActive: boolean;
+  dangerLevel: number;
   screenFlashMs: number;
   screenFlashColor: string;
 }
@@ -90,6 +91,16 @@ export class CartoonRenderer {
 
     if (state.racketActive) {
       this.drawElectricAura(ctx, state.timeSec);
+    }
+
+    if (state.dangerLevel > 0.25) {
+      const dangerPulse = (0.35 + 0.35 * Math.sin(state.timeSec * 14)) * state.dangerLevel;
+      ctx.save();
+      ctx.strokeStyle = '#ff4d6d';
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = Math.min(0.5, dangerPulse);
+      ctx.strokeRect(4, 4, WORLD_WIDTH - 8, WORLD_HEIGHT - 8);
+      ctx.restore();
     }
 
     if (state.screenFlashMs > 0) {

@@ -1,9 +1,14 @@
 import './style.css';
 import { GameEngine } from './engine/GameEngine';
 import { adManager } from './services/AdManager';
+import { nativeBridge } from './services/NativeBridge';
 import { UIController } from './ui/Screens';
 
 async function bootstrap(): Promise<void> {
+  if (nativeBridge.isNative) {
+    document.body.classList.add('is-native');
+  }
+
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null;
   const overlay = document.getElementById('ui-overlay');
 
@@ -17,6 +22,7 @@ async function bootstrap(): Promise<void> {
   const engine = new GameEngine(canvas, {
     onPhaseChange: (phase, summary) => ui.handlePhaseChange(phase, summary),
     onHudUpdate: (hud) => ui.updateHud(hud),
+    onAchievementUnlock: (badge) => ui.showAchievementToast(badge),
   });
 
   ui = new UIController(overlay, engine);

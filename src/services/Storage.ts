@@ -10,6 +10,22 @@ export interface DdaModifiers {
   statusLabel: 'Flow' | 'Spicy!' | 'Mercy';
 }
 
+export interface AchievementDef {
+  id: string;
+  icon: string;
+  title: string;
+  desc: string;
+}
+
+export const ACHIEVEMENTS: AchievementDef[] = [
+  { id: 'first_swat', icon: '🦟', title: 'First Swat', desc: 'Blast your first mosquito' },
+  { id: 'combo_8', icon: '🔥', title: 'Fever Hands', desc: 'Reach an 8x hit combo' },
+  { id: 'singer_5', icon: '🎧', title: 'Mic Dropper', desc: 'Silence 5 DJ Singing mosquitoes' },
+  { id: 'sharpshooter', icon: '🎯', title: 'Sniper Uncle', desc: 'Clear a night with 85%+ accuracy' },
+  { id: 'king_slayer', icon: '👑', title: 'King Slayer', desc: 'Defeat a Giant King Mosquito' },
+  { id: 'endless_25', icon: '🌙', title: 'Night Watchman', desc: 'Blast 25+ in Endless Night' },
+];
+
 export interface SaveData {
   highestUnlockedLevel: number;
   starsByLevel: Record<number, number>;
@@ -17,12 +33,15 @@ export interface SaveData {
   highScore: number;
   bestEndlessScore: number;
   totalSwatted: number;
+  singersSilenced: number;
+  bossesDefeated: number;
   coins: number;
   muted: boolean;
   stamina: number;
   lastStaminaUpdatedAt: number;
   winStreak: number;
   lastAccuracy: number;
+  achievements: string[];
 }
 
 const STORAGE_KEY = 'sleep_swatter_save_v2';
@@ -34,12 +53,15 @@ const DEFAULT_SAVE: SaveData = {
   highScore: 0,
   bestEndlessScore: 0,
   totalSwatted: 0,
+  singersSilenced: 0,
+  bossesDefeated: 0,
   coins: 40, // Starter coins so players experience the Booster Shop early
   muted: false,
   stamina: MAX_STAMINA,
   lastStaminaUpdatedAt: Date.now(),
   winStreak: 0,
   lastAccuracy: 70,
+  achievements: [],
 };
 
 class StorageService {
@@ -53,16 +75,17 @@ class StorageService {
   private load(): SaveData {
     try {
       const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem('sleep_swatter_save_v1');
-      if (!raw) return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {} };
+      if (!raw) return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {}, achievements: [] };
       const parsed = JSON.parse(raw) as Partial<SaveData>;
       return {
         ...DEFAULT_SAVE,
         ...parsed,
         starsByLevel: { ...(parsed.starsByLevel ?? {}) },
         failsByLevel: { ...(parsed.failsByLevel ?? {}) },
+        achievements: Array.isArray(parsed.achievements) ? [...parsed.achievements] : [],
       };
     } catch {
-      return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {} };
+      return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {}, achievements: [] };
     }
   }
 
@@ -175,6 +198,26 @@ class StorageService {
   addCoins(amount: number): void {
     this.data.coins += amount;
     this.save();
+  }
+
+  recordSpecialKill(kind: 'singer' | 'boss'): void {
+    if (kind === 'singer') this.data.singersSilenced += 1;
+    if (kind === 'boss') this.data.bossesDefeated += 1;
+    this.save();
+  }
+
+  unlockAchievement(id: string): AchievementDef | null {
+    if (this.data.achievements.includes(id)) return null;
+    const def = ACHIEVEMENTS.find((a) => a.id === id);
+    if (!def) return null;
+    this.data.achievements.push(id);
+    this.data.coins += 10;
+    this.save();
+    return def;
+  }
+
+  getTotalStars(): number {
+    return Object.values(this.data.starsByLevel).reduce((sum, s) => sum + s, 0);
   }
 
   /**

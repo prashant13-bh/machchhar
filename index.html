@@ -18,8 +18,73 @@
   </head>
   <body>
     <div id="app">
-      <canvas id="game-canvas"></canvas>
-      <div id="ui-overlay"></div>
+      <div id="desktop-shell">
+        <aside id="desktop-left" class="desktop-panel" aria-label="Controls and Enemy Guide">
+          <div class="panel-card">
+            <div class="panel-kicker">DESKTOP ARCADE EDITION</div>
+            <h2 class="panel-title">Machchhar: Raat ka Daaku</h2>
+            <p class="panel-desc">
+              Guard Uncle's midnight sleep from singing, dodging, and armored mosquitoes using laser-guided shots!
+            </p>
+          </div>
+
+          <div class="panel-card">
+            <h3 class="panel-heading">🎮 Desktop Controls</h3>
+            <ul class="key-list">
+              <li><span>Aim Laser Sight</span><kbd>Mouse</kbd> / <kbd>A</kbd><kbd>D</kbd></li>
+              <li><span>Instant Blast</span><kbd>Left Click</kbd> / <kbd>Space</kbd></li>
+              <li><span>Tactical Reload</span><kbd>R</kbd> or Tap Ammo</li>
+              <li><span>Pause / Resume</span><kbd>P</kbd> or <kbd>Esc</kbd></li>
+              <li><span>Mute / Fullscreen</span><kbd>M</kbd> / <kbd>F</kbd></li>
+            </ul>
+          </div>
+
+          <div class="panel-card">
+            <h3 class="panel-heading">🦟 Mosquito Field Guide</h3>
+            <div class="intel-list">
+              <div class="intel-item"><span>🦟</span><div><strong>Buzzer</strong><small>1 HP · Standard pest</small></div></div>
+              <div class="intel-item"><span>🎧</span><div><strong>DJ Singer</strong><small>300 pts · Sings songs, drops mic!</small></div></div>
+              <div class="intel-item"><span>🥷</span><div><strong>Ninja</strong><small>Fast · Dodges laser locks!</small></div></div>
+              <div class="intel-item"><span>🛡️</span><div><strong>Tank</strong><small>2 HP · Stuns on first shot</small></div></div>
+              <div class="intel-item"><span>👑</span><div><strong>King Boss</strong><small>6 HP · Appears on Boss Nights</small></div></div>
+            </div>
+          </div>
+        </aside>
+
+        <main id="stage-frame">
+          <canvas id="game-canvas"></canvas>
+          <div id="ui-overlay"></div>
+          <div id="achievement-toast" class="achievement-toast hidden" role="status" aria-live="polite"></div>
+        </main>
+
+        <aside id="desktop-right" class="desktop-panel" aria-label="Career Stats and Desktop Navigation">
+          <div id="desktop-career-card" class="panel-card"></div>
+
+          <div class="panel-card">
+            <h3 class="panel-heading">⚡ Arsenal &amp; Fever Tips</h3>
+            <div class="intel-list">
+              <div class="intel-item"><span>⚡</span><div><strong>Zap Ammo</strong><small>Infinite rapid shots + chain hit</small></div></div>
+              <div class="intel-item"><span>🌀</span><div><strong>Sleep Coil</strong><small>Slows every mosquito by 52%</small></div></div>
+              <div class="intel-item"><span>💖</span><div><strong>Deep Sleep</strong><small>Restores +1 Sleep Heart</small></div></div>
+              <div class="intel-item"><span>🔥</span><div><strong>5x Streak Bonus</strong><small>Every 5 combo kills grants +5 🪙</small></div></div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <h3 class="panel-heading">🌐 Desktop Pages</h3>
+            <div class="desktop-actions">
+              <button id="desktop-fullscreen-btn" class="btn-secondary btn-compact" type="button">⛶ TOGGLE FULLSCREEN (F)</button>
+              <nav class="desktop-nav-links">
+                <a href="./guide.html">📖 Full Game Guide</a>
+                <a href="./privacy.html">🔒 Privacy Policy</a>
+                <a href="./terms.html">📜 Terms of Service</a>
+                <a href="./support.html">🛟 Support &amp; Data Deletion</a>
+              </nav>
+            </div>
+          </div>
+        </aside>
+      </div>
+
       <div id="web-banner-slot" class="web-banner hidden" aria-hidden="true"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
