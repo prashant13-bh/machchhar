@@ -1,0 +1,17 @@
+{
+  "name": "Sleep Swatter",
+  "short_name": "Sleep Swatter",
+  "description": "Swat buzzing mosquitoes before they wake the sleeper!",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1326",
+  "theme_color": "#0d1326",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

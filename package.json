@@ -1,0 +1,24 @@
+{
+  "name": "sleep-swatter",
+  "version": "1.0.0",
+  "description": "Sleep Swatter — Defend the sleeper from buzzing mosquitoes! Built for Web & Google Play.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^6.2.0",
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

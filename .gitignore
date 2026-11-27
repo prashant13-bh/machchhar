@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Android / Gradle generated artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/release/
+
+# Release signing secrets (never commit upload keystores!)
+android/keystore.properties
+android/app/*.jks
+android/app/*.keystore
