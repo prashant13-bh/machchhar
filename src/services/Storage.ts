@@ -1,3 +1,12 @@
+import { Capacitor } from '@capacitor/core';
+import {
+  computeCampaignCoins,
+  computeDailyReward,
+  getDateKey,
+  getYesterdayDateKey,
+  resolveDefaultTheme,
+} from '../engine/GameRules';
+
 export const MAX_STAMINA = 5;
 export const STAMINA_REGEN_MS = 10 * 60 * 1000; // 10 minutes per stamina bolt
 export const STAMINA_REFILL_COST = 50;
@@ -43,6 +52,8 @@ export interface SaveData {
   lastAccuracy: number;
   achievements: string[];
   theme: 'light' | 'dark';
+  dailyStreak: number;
+  lastDailyClaimDate: string;
 }
 
 const STORAGE_KEY = 'sleep_swatter_save_v2';
@@ -63,10 +74,12 @@ const DEFAULT_SAVE: SaveData = {
   winStreak: 0,
   lastAccuracy: 70,
   achievements: [],
-  theme: 'light',
+  theme: 'dark',
+  dailyStreak: 0,
+  lastDailyClaimDate: '',
 };
 
-class StorageService {
+export class StorageService {
   private data: SaveData;
 
   constructor() {
@@ -74,26 +87,60 @@ class StorageService {
     this.syncStaminaRegen();
   }
 
+  private getStorage(): Storage | null {
+    return typeof globalThis !== 'undefined' && 'localStorage' in globalThis
+      ? globalThis.localStorage
+      : null;
+  }
+
+  private getDefaultPlatformTheme(): 'light' | 'dark' {
+    const isNative =
+      Capacitor.isNativePlatform() ||
+      (typeof document !== 'undefined' && document.body?.classList.contains('is-native'));
+    const viewportWidth =
+      typeof globalThis !== 'undefined' && 'innerWidth' in globalThis
+        ? Number((globalThis as { innerWidth?: number }).innerWidth ?? 0)
+        : 0;
+    return resolveDefaultTheme({ isNative, viewportWidth });
+  }
+
   private load(): SaveData {
+    const fallbackTheme = this.getDefaultPlatformTheme();
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem('sleep_swatter_save_v1');
-      if (!raw) return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {}, achievements: [] };
+      const store = this.getStorage();
+      const raw = store?.getItem(STORAGE_KEY) ?? store?.getItem('sleep_swatter_save_v1') ?? null;
+      if (!raw) {
+        return {
+          ...DEFAULT_SAVE,
+          theme: fallbackTheme,
+          starsByLevel: {},
+          failsByLevel: {},
+          achievements: [],
+        };
+      }
       const parsed = JSON.parse(raw) as Partial<SaveData>;
       return {
         ...DEFAULT_SAVE,
         ...parsed,
+        theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : fallbackTheme,
         starsByLevel: { ...(parsed.starsByLevel ?? {}) },
         failsByLevel: { ...(parsed.failsByLevel ?? {}) },
         achievements: Array.isArray(parsed.achievements) ? [...parsed.achievements] : [],
       };
     } catch {
-      return { ...DEFAULT_SAVE, starsByLevel: {}, failsByLevel: {}, achievements: [] };
+      return {
+        ...DEFAULT_SAVE,
+        theme: fallbackTheme,
+        starsByLevel: {},
+        failsByLevel: {},
+        achievements: [],
+      };
     }
   }
 
   private save(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.getStorage()?.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch {
       // Ignore storage quota errors
     }
@@ -181,7 +228,7 @@ class StorageService {
     }
     this.data.highScore = Math.max(this.data.highScore, score);
     this.data.totalSwatted += kills;
-    this.data.coins += Math.max(8, Math.round(kills * 1.5) + stars * 10);
+    this.data.coins += computeCampaignCoins(kills, stars);
     this.data.winStreak += 1;
     this.data.lastAccuracy = accuracy;
     this.data.failsByLevel[levelId] = 0;
@@ -223,13 +270,70 @@ class StorageService {
   }
 
   getTheme(): 'light' | 'dark' {
-    return this.data.theme === 'dark' ? 'dark' : 'light';
+    return this.data.theme === 'light' ? 'light' : 'dark';
   }
 
   toggleTheme(): 'light' | 'dark' {
     this.data.theme = this.getTheme() === 'light' ? 'dark' : 'light';
     this.save();
     return this.data.theme;
+  }
+
+  /** Evaluates whether today's Daily Night Bonus is available and how many coins it pays. */
+  getDailyBonusStatus(now: Date = new Date()): {
+    available: boolean;
+    nextStreak: number;
+    rewardCoins: number;
+    currentStreak: number;
+  } {
+    const today = getDateKey(now);
+    if (this.data.lastDailyClaimDate === today) {
+      return {
+        available: false,
+        nextStreak: this.data.dailyStreak,
+        rewardCoins: computeDailyReward(this.data.dailyStreak),
+        currentStreak: this.data.dailyStreak,
+      };
+    }
+    const yesterday = getYesterdayDateKey(now);
+    const nextStreak = this.data.lastDailyClaimDate === yesterday ? this.data.dailyStreak + 1 : 1;
+    return {
+      available: true,
+      nextStreak,
+      rewardCoins: computeDailyReward(nextStreak),
+      currentStreak: this.data.dailyStreak,
+    };
+  }
+
+  /** Claims today's Daily Night Bonus once per calendar day and increments streak. */
+  claimDailyBonus(now: Date = new Date()): { claimed: boolean; streak: number; coins: number } {
+    const status = this.getDailyBonusStatus(now);
+    if (!status.available) {
+      return { claimed: false, streak: this.data.dailyStreak, coins: 0 };
+    }
+    this.data.dailyStreak = status.nextStreak;
+    this.data.lastDailyClaimDate = getDateKey(now);
+    this.data.coins += status.rewardCoins;
+    this.save();
+    return { claimed: true, streak: status.nextStreak, coins: status.rewardCoins };
+  }
+
+  /**
+   * Goal-Gradient psychology helper: returns the player's closest actionable milestone
+   * so they always see tangible progress toward the next reward.
+   */
+  getNextGoalHint(): string {
+    if (!this.data.achievements.includes('first_swat')) {
+      return 'Next Trophy: Blast 1 mosquito (+10 🪙)';
+    }
+    if (!this.data.achievements.includes('singer_5')) {
+      const done = Math.min(5, this.data.singersSilenced);
+      return `Mic Dropper: ${done}/5 DJ Singers silenced (+10 🪙)`;
+    }
+    if (!this.data.achievements.includes('king_slayer')) {
+      return 'King Slayer: Defeat Boss on Night 5 (+10 🪙)';
+    }
+    return `Campaign Mastery: ${this.getTotalStars()}/30 ★ Stars`;
   }
 
   /**

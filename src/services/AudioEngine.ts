@@ -47,7 +47,9 @@ class AudioEngine {
   private muted: boolean = storage.isMuted();
 
   private buffers: Partial<Record<BufferKey, AudioBuffer>> = {};
+  private rawBuffers: Partial<Record<BufferKey, ArrayBuffer>> = {};
   private loadingStarted = false;
+  private prefetchPromise: Promise<void> | null = null;
 
   private buzz1Gain: GainNode | null = null;
   private buzz2Gain: GainNode | null = null;
@@ -92,41 +94,75 @@ class AudioEngine {
     }
   }
 
+  private static readonly CLIP_ENTRIES: Array<[BufferKey, string]> = [
+    ['buzz1', './audio/buzz-1.mp3'],
+    ['buzz2', './audio/buzz-2.mp3'],
+    ['gunshot', './audio/gunshot.mp3'],
+    ['scream', './audio/scream.mp3'],
+    ['miss', './audio/miss.mp3'],
+    ['singer1', './audio/singer-1.mp3'],
+    ['singer2', './audio/singer-2.mp3'],
+    ['singer3', './audio/singer-3.mp3'],
+    ['singer4', './audio/singer-4.mp3'],
+    ['memeChalo', './audio/meme-chalo.mp3'],
+    ['memeAayein', './audio/meme-aayein.mp3'],
+    ['memeYehKyaHai', './audio/meme-yeh-kya-hai.mp3'],
+    ['memeKyaRe', './audio/meme-kya-re.mp3'],
+    ['memeBaingan', './audio/meme-baingan.mp3'],
+    ['memeBaapRe', './audio/meme-baap-re.mp3'],
+    ['memeBachaLo', './audio/meme-bacha-lo.mp3'],
+    ['memeEkSecond', './audio/meme-ek-second.mp3'],
+    ['memeYeLe', './audio/meme-ye-le.mp3'],
+  ];
+
+  /** Pre-fetches audio clips during boot so first-tap audio decoding is instant. */
+  async preloadAssets(onProgress?: (ratio: number) => void): Promise<void> {
+    if (this.prefetchPromise) {
+      await this.prefetchPromise;
+      onProgress?.(1);
+      return;
+    }
+    const entries = AudioEngine.CLIP_ENTRIES;
+    let done = 0;
+    this.prefetchPromise = Promise.all(
+      entries.map(async ([key, url]) => {
+        try {
+          if (!this.rawBuffers[key]) {
+            const res = await fetch(url);
+            if (res.ok) {
+              this.rawBuffers[key] = await res.arrayBuffer();
+            }
+          }
+        } catch {
+          // Ignore fetch failure gracefully
+        } finally {
+          done += 1;
+          onProgress?.(done / entries.length);
+        }
+      })
+    ).then(() => undefined);
+    await this.prefetchPromise;
+  }
+
   private async preloadClips(): Promise<void> {
     if (!this.ctx || this.loadingStarted) return;
     this.loadingStarted = true;
 
-    const entries: Array<[BufferKey, string]> = [
-      ['buzz1', './audio/buzz-1.mp3'],
-      ['buzz2', './audio/buzz-2.mp3'],
-      ['gunshot', './audio/gunshot.mp3'],
-      ['scream', './audio/scream.mp3'],
-      ['miss', './audio/miss.mp3'],
-      ['singer1', './audio/singer-1.mp3'],
-      ['singer2', './audio/singer-2.mp3'],
-      ['singer3', './audio/singer-3.mp3'],
-      ['singer4', './audio/singer-4.mp3'],
-      ['memeChalo', './audio/meme-chalo.mp3'],
-      ['memeAayein', './audio/meme-aayein.mp3'],
-      ['memeYehKyaHai', './audio/meme-yeh-kya-hai.mp3'],
-      ['memeKyaRe', './audio/meme-kya-re.mp3'],
-      ['memeBaingan', './audio/meme-baingan.mp3'],
-      ['memeBaapRe', './audio/meme-baap-re.mp3'],
-      ['memeBachaLo', './audio/meme-bacha-lo.mp3'],
-      ['memeEkSecond', './audio/meme-ek-second.mp3'],
-      ['memeYeLe', './audio/meme-ye-le.mp3'],
-    ];
-
+    await this.preloadAssets();
     await Promise.all(
-      entries.map(async ([key, url]) => {
-        if (!this.ctx) return;
+      AudioEngine.CLIP_ENTRIES.map(async ([key, url]) => {
+        if (!this.ctx || this.buffers[key]) return;
         try {
-          const res = await fetch(url);
-          if (!res.ok) return;
-          const arr = await res.arrayBuffer();
-          this.buffers[key] = await this.ctx.decodeAudioData(arr);
+          let arr = this.rawBuffers[key];
+          if (!arr) {
+            const res = await fetch(url);
+            if (!res.ok) return;
+            arr = await res.arrayBuffer();
+            this.rawBuffers[key] = arr;
+          }
+          this.buffers[key] = await this.ctx.decodeAudioData(arr.slice(0));
         } catch {
-          // Ignore fetch failure gracefully
+          // Ignore decode failure gracefully
         }
       })
     );

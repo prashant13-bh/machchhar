@@ -68,9 +68,19 @@ Because the app integrates **Google AdMob (`@capacitor-community/admob`)** and s
 ## 5. Generated Graphic Assets (Ready to Upload in `store-assets/`)
 
 - **App Icon (`512 × 512 px` PNG)**: `store-assets/playstore-icon-512x512.png`
-- **Feature Graphic (`1024 × 500 px` PNG)**: `store-assets/playstore-feature-1024x500.png`
-- **Phone Screenshots (`1080 × 1920 px` PNG)**:
-  - `store-assets/screenshot-1-1080x1920.png` (*Aim & Blast From Bed!*)
-  - `store-assets/screenshot-2-1080x1920.png` (*Silence the Singing Swarm!*)
-  - `store-assets/screenshot-3-1080x1920.png` (*Epic Boss Nights & Power-Ups!*)
-- **Android Launcher Icons**: Updated across `android/app/src/main/res/mipmap-*` (`mdpi` through `xxxhdpi`) and web PWA icons (`public/icon-192.png`, `public/icon-512.png`).
+- **Feature Graphic (`1024 × 500 px` JPEG / PNG)**: `store-assets/playstore-feature-1024x500.jpg` (and `store-assets/playstore-feature-1024x500.png`)
+- **Phone Screenshots (`1080 × 1920 px` PNG — Real In-Game Captures)**:
+  - `store-assets/screenshot-1-1080x1920.png` (*Aim & Blast From Bed*)
+  - `store-assets/screenshot-2-1080x1920.png` (*Defeat The King Swarm*)
+  - `store-assets/screenshot-3-1080x1920.png` (*Conquer Every Night*)
+  - `store-assets/screenshot-4-1080x1920.png` (*Equip & Chase High Scores*)
+- **Android Launcher Icons**: Updated across `android/app/src/main/res/mipmap-*` (`mdpi` through `xxxhdpi`) and web PWA icons (`public/icon-192.png`, `public/icon-512.png`, `public/favicon.svg`).
+
+### Google Play Games on PC Assets (`store-assets/`)
+- **PC Logo (`600 × 400 px` transparent PNG)**: `store-assets/pc-logo-600x400.png`
+- **PC Feature Graphic (`1920 × 1080 px` 16:9 JPG, text-free game cover)**: `store-assets/pc-feature-1920x1080.jpg`
+- **PC Screenshots (`1920 × 1080 px` 16:9 PNG — Real Desktop Theater Captures)**:
+  - `store-assets/pc-screenshot-1-1920x1080.png` (*Night 4 Desktop Gameplay*)
+  - `store-assets/pc-screenshot-2-1920x1080.png` (*Night 5 King Mosquito Boss Battle*)
+  - `store-assets/pc-screenshot-3-1920x1080.png` (*Campaign Night Selector*)
+  - `store-assets/pc-screenshot-4-1920x1080.png` (*Title, Daily Night Bonus & Loadout*)

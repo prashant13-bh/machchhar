@@ -72,6 +72,9 @@ export class UIController {
       audioEngine.playUiClick();
       storage.toggleTheme();
       this.applyTheme();
+      if (this.currentScreen === 'menu') {
+        this.renderMenu();
+      }
     });
 
     document.getElementById('top-nights-btn')?.addEventListener('click', () => {
@@ -245,9 +248,12 @@ export class UIController {
     }
     if (comboEl) {
       if (hud.combo >= 2) {
-        comboEl.textContent = `x${hud.combo} COMBO`;
+        const fever = hud.combo >= 5;
+        comboEl.textContent = fever ? `🔥 x${hud.combo} FEVER` : `x${hud.combo} COMBO`;
+        comboEl.classList.toggle('combo-fever', fever);
         comboEl.classList.remove('hidden');
       } else {
+        comboEl.classList.remove('combo-fever');
         comboEl.classList.add('hidden');
       }
     }
@@ -308,6 +314,8 @@ export class UIController {
     const nextLevel = Math.min(save.highestUnlockedLevel, TOTAL_CAMPAIGN_LEVELS);
     const nextCfg = getLevelConfig(nextLevel);
     const dda = storage.computeDdaModifiers(nextLevel);
+    const dailyBonus = storage.getDailyBonusStatus();
+    const goalHint = storage.getNextGoalHint();
     const soundIcon = audioEngine.isMuted() ? SVG.soundOff : SVG.soundOn;
     const themeIcon = storage.getTheme() === 'light' ? SVG.moon : SVG.sun;
 
@@ -338,6 +346,12 @@ export class UIController {
             Guard Uncle's midnight sleep — aim &amp; silence the singing swarm!
             ${dda.statusLabel === 'Spicy!' ? '<br><strong style="color:var(--accent-pink)">Win Streak Active: Speed Boosted!</strong>' : ''}
           </p>
+
+          ${
+            dailyBonus.available
+              ? `<button id="claim-daily-btn" class="daily-bonus-btn">🌙 Claim Night Bonus · Day ${dailyBonus.nextStreak} <strong>(+${dailyBonus.rewardCoins} 🪙)</strong></button>`
+              : `<div class="goal-pill">🎯 ${goalHint}</div>`
+          }
 
           <div class="stats-row">
             <div class="stat-box"><strong>${save.highScore.toLocaleString()}</strong><span>Best Score</span></div>
@@ -399,6 +413,16 @@ export class UIController {
         }
       }, 1000);
     }
+
+    this.root.querySelector('#claim-daily-btn')?.addEventListener('click', () => {
+      audioEngine.unlock();
+      const res = storage.claimDailyBonus();
+      if (res.claimed) {
+        audioEngine.playPowerUp('pillow');
+        nativeBridge.haptic('clear');
+        this.renderMenu();
+      }
+    });
 
     this.root.querySelector('#menu-mute-btn')?.addEventListener('click', () => {
       audioEngine.unlock();
@@ -653,7 +677,7 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:var(--accent-pink);background:#ffe4e6">SLEEPY HANDS</div>
+          <div class="game-badge badge-danger">SLEEPY HANDS</div>
           <h2>Out of Sleep Stamina</h2>
           <p class="subtitle">
             Next bolt regenerates in <strong>${this.formatStaminaCountdown(stam.msUntilNext)}</strong>.<br>
@@ -846,6 +870,7 @@ export class UIController {
     const s = this.lastSummary;
     if (!s) return;
     const starsHtml = '⭐'.repeat(s.stars) + '☆'.repeat(3 - s.stars);
+    const nextCfg = getLevelConfig(s.levelId + 1);
 
     this.root.innerHTML = `
       <div class="screen-backdrop">
@@ -853,6 +878,7 @@ export class UIController {
           <div class="game-badge">SWEET DREAMS</div>
           <h2>${s.levelName} Cleared!</h2>
           <div class="stars-display">${starsHtml}</div>
+          <div class="goal-pill">Up Next: ${nextCfg.name}</div>
           <div class="stats-row">
             <div class="stat-box"><strong>${s.score.toLocaleString()}</strong><span>Score</span></div>
             <div class="stat-box"><strong>${s.accuracy}%</strong><span>Accuracy</span></div>
@@ -916,7 +942,7 @@ export class UIController {
     this.root.innerHTML = `
       <div class="screen-backdrop">
         <div class="card">
-          <div class="game-badge" style="color:var(--accent-pink);background:#ffe4e6">
+          <div class="game-badge badge-danger">
             ${isNearMiss ? `SO CLOSE! ONLY ${s.remainingToWin} LEFT` : 'ALARM RINGING'}
           </div>
           <h2>He Woke Up Grumpy!</h2>

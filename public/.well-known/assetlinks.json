@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mct.machchhar",
+      "sha256_cert_fingerprints": [
+        "CD:D8:7E:E1:31:53:FD:38:4C:76:2D:D4:88:6E:41:AA:3D:DB:17:A2:77:5C:0E:21:CA:0A:F7:4E:53:82:37:F5"
+      ]
+    }
+  }
+]

@@ -22,6 +22,13 @@ import {
   type SleeperState,
   type ZzzBubble,
 } from './Entities';
+import {
+  CLUTCH_SAVE_BONUS,
+  computeCampaignCoins,
+  computeComboMultiplier,
+  isClutchSave,
+  isFeverCombo,
+} from './GameRules';
 import { CartoonRenderer } from './Renderer';
 
 export type GamePhase = 'menu' | 'playing' | 'paused' | 'level_clear' | 'game_over';
@@ -720,21 +727,28 @@ export class GameEngine {
     this.combo += 1;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
 
-    const comboMult = Math.min(5, 1 + Math.floor((this.combo - 1) / 3));
-    const earned = m.points * comboMult * this.scoreMultiplier;
+    const clutch = isClutchSave(m.state, m.x, m.y, this.sleeper.targetX, this.sleeper.targetY);
+    const comboMult = computeComboMultiplier(this.combo);
+    const earned = m.points * comboMult * this.scoreMultiplier + (clutch ? CLUTCH_SAVE_BONUS : 0);
     this.score += earned;
 
     const labels = ['BANG!', 'DHISHOOM!', 'HEADSHOT!', 'BOOM!'];
-    const label = isZap ? 'ZAP!' : m.kind === 'singer' ? 'MIC DROP!' : labels[this.kills % labels.length];
+    const label = clutch
+      ? 'CLUTCH SAVE!'
+      : isZap
+        ? 'ZAP!'
+        : m.kind === 'singer'
+          ? 'MIC DROP!'
+          : labels[this.kills % labels.length];
 
     this.impacts.push({
       x: m.x,
       y: m.y,
-      radius: isZap ? 56 : 38,
+      radius: isZap ? 56 : clutch ? 48 : 38,
       lifeMs: 300,
       maxLifeMs: 300,
       label,
-      color: isZap ? '#38bdf8' : m.kind === 'singer' ? '#f472b6' : '#ffd166',
+      color: clutch ? '#4ade80' : isZap ? '#38bdf8' : m.kind === 'singer' ? '#f472b6' : '#ffd166',
       isZap,
     });
 
@@ -748,10 +762,14 @@ export class GameEngine {
     this.addFloatingText(
       m.x,
       m.y - 10,
-      `+${earned}${comboSuffix}`,
-      '#fde047',
-      comboMult > 1 ? 1.18 : 1
+      clutch ? `+${earned} CLUTCH!` : `+${earned}${comboSuffix}`,
+      clutch ? '#4ade80' : '#fde047',
+      comboMult > 1 || clutch ? 1.18 : 1
     );
+
+    if (this.combo === 5) {
+      this.addFloatingText(WORLD_WIDTH / 2, 168, '🔥 FEVER MODE ACTIVE!', '#fbbf24', 1.2);
+    }
 
     if (this.combo >= 5 && this.combo % 5 === 0) {
       storage.addCoins(5);
@@ -854,7 +872,7 @@ export class GameEngine {
     }
     const heartRatio = this.sleeper.hearts / this.sleeper.maxHearts;
     const stars = heartRatio >= 0.75 ? 3 : heartRatio >= 0.45 ? 2 : 1;
-    const coinsEarned = Math.max(8, Math.round(this.kills * 1.5) + stars * 10);
+    const coinsEarned = computeCampaignCoins(this.kills, stars);
 
     storage.recordLevelWin(this.level.id, this.score, stars, this.kills, accuracy);
 
@@ -947,6 +965,7 @@ export class GameEngine {
       zzzs: this.zzzs,
       racketActive: this.racketMs > 0,
       coilActive: this.coilMs > 0,
+      feverActive: this.phase === 'playing' && isFeverCombo(this.combo),
       dangerLevel: this.dangerLevel,
       screenFlashMs: this.screenFlashMs,
       screenFlashColor: this.screenFlashColor,

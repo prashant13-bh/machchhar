@@ -26,6 +26,7 @@ export interface RenderContextState {
   zzzs: ZzzBubble[];
   racketActive: boolean;
   coilActive: boolean;
+  feverActive?: boolean;
   dangerLevel: number;
   screenFlashMs: number;
   screenFlashColor: string;
@@ -53,10 +54,12 @@ export class CartoonRenderer {
   ): { scale: number; offsetX: number; offsetY: number } {
     ctx.save();
 
-    // Outer letterbox/pillarbox night gradient
+    // Seamless night-bedroom outer backdrop so tall screens have no harsh floating rectangle
     const outerGrad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-    outerGrad.addColorStop(0, '#0a1022');
-    outerGrad.addColorStop(1, '#151b33');
+    outerGrad.addColorStop(0, '#090e1e');
+    outerGrad.addColorStop(0.28, '#121a35');
+    outerGrad.addColorStop(0.75, '#192140');
+    outerGrad.addColorStop(1, '#0d0a16');
     ctx.fillStyle = outerGrad;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -73,6 +76,7 @@ export class CartoonRenderer {
     }
 
     this.drawBedroom(ctx, state.timeSec, state.coilActive);
+    this.drawMoonlightMotes(ctx, state.timeSec);
     this.drawDottedAimLine(ctx, state.sleeper, state.timeSec, state.racketActive);
     this.drawBedAndSleeper(ctx, state.sleeper, state.timeSec);
     this.drawZzzBubbles(ctx, state.zzzs);
@@ -88,6 +92,10 @@ export class CartoonRenderer {
     this.drawImpactEffects(ctx, state.impacts);
     this.drawSpeechBubble(ctx, state.sleeper);
     this.drawFloatingTexts(ctx, state.texts);
+
+    if (state.feverActive && !state.racketActive) {
+      this.drawFeverAura(ctx, state.timeSec);
+    }
 
     if (state.racketActive) {
       this.drawElectricAura(ctx, state.timeSec);
@@ -821,6 +829,23 @@ export class CartoonRenderer {
 
     ctx.restore();
 
+    if (m.state === 'diving') {
+      const pulse = 0.5 + 0.45 * Math.sin(timeSec * 18 + m.id);
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = '#ff4d6d';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.radius + 9, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.font = '900 13px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff4d6d';
+      ctx.fillText('!', m.x, m.y - m.radius - 10);
+      ctx.restore();
+    }
+
     if (m.kind === 'singer') {
       const notes = ['♪', '♫'];
       for (let n = 0; n < 2; n++) {
@@ -991,6 +1016,29 @@ export class CartoonRenderer {
       ctx.fillStyle = '#bae6fd';
       ctx.fillText('Z', z.x, z.y);
     }
+    ctx.restore();
+  }
+
+  private drawMoonlightMotes(ctx: CanvasRenderingContext2D, timeSec: number): void {
+    ctx.save();
+    for (let i = 0; i < 14; i++) {
+      const mx = 55 + ((i * 53 + Math.sin(timeSec * 0.7 + i) * 14) % 240);
+      const my = 215 + ((i * 39 + timeSec * (7 + (i % 3) * 3)) % 350);
+      const alpha = 0.14 + 0.14 * Math.sin(timeSec * 2.1 + i * 1.3);
+      ctx.fillStyle = `rgba(224, 242, 254, ${alpha.toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(mx, my, 1.3 + (i % 2) * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  private drawFeverAura(ctx: CanvasRenderingContext2D, timeSec: number): void {
+    ctx.save();
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 5;
+    ctx.globalAlpha = 0.3 + 0.2 * Math.sin(timeSec * 11);
+    ctx.strokeRect(4, 4, WORLD_WIDTH - 8, WORLD_HEIGHT - 8);
     ctx.restore();
   }
 

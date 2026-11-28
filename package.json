@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "node tests/run-tests.mjs",
+    "test:e2e": "node tests/e2e-ui.mjs",
     "cap:sync": "npm run build && npx cap sync android",
     "cap:open": "npx cap open android"
   },
